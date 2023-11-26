@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Coin : MonoBehaviour
 {
-    //Team
     [Tooltip("To which team does this coin belong to?")]
     private Team team;
     public Team Team { get { return team; } }
@@ -32,6 +31,9 @@ public class Coin : MonoBehaviour
         isGlowing = true;
         StartCoroutine(GlowLerp());
     }
+
+
+
 
     private IEnumerator GlowLerp()
     {

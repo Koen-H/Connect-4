@@ -227,6 +227,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   gameBoard: {fileID: 1424745797}
+  rowColliderLayer:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!4 &266270815
 Transform:
   m_ObjectHideFlags: 0
@@ -725,6 +728,8 @@ MonoBehaviour:
   boardHeight: 6
   connectWinCondition: 4
   coinSlotPrefab: {fileID: 5825958213365299730, guid: 62ede41d6e19a824cb98ac8362bf84b3,
+    type: 3}
+  rowColiderPrefab: {fileID: -1709779429505319690, guid: 15549f3128c17cf4d957e4977e7a0f1a,
     type: 3}
 --- !u!1 &1569669703
 GameObject:

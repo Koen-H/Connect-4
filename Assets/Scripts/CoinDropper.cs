@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,6 +18,8 @@ public class CoinDropper : MonoBehaviour
     [SerializeField]
     GameBoard gameBoard;
 
+    [SerializeField, Tooltip("The row collider layer")]
+    private LayerMask rowColliderLayer;
 
     private Vector3[] coinDropPositions;
 
@@ -33,18 +36,18 @@ public class CoinDropper : MonoBehaviour
     }
 
 
-    //Temporary
     void Update()
     {
-        
-        if (Input.GetKeyDown(KeyCode.Space)) DropCoin();
-        if (Input.GetKeyDown(KeyCode.Alpha1)) SelectRow(0);
-        if (Input.GetKeyDown(KeyCode.Alpha2)) SelectRow(1);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) SelectRow(2);
-        if (Input.GetKeyDown(KeyCode.Alpha4)) SelectRow(3);
-        if (Input.GetKeyDown(KeyCode.Alpha5)) SelectRow(4);
-        if (Input.GetKeyDown(KeyCode.Alpha6)) SelectRow(5);
-        
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, rowColliderLayer))
+        {
+            if (hitInfo.collider.gameObject.TryGetComponent<RowCollider>(out RowCollider rowCol))
+            {
+                SelectRow(rowCol.Row);
+            }
+        }
+        if (Input.GetMouseButtonDown(0)) DropCoin();
     }
 
     public void CreateCoin(Team currentTeam)
