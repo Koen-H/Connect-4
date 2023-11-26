@@ -50,7 +50,7 @@ public class CoinDropper : MonoBehaviour
     public void CreateCoin(Team currentTeam)
     {
         currentCoin = Instantiate(coinPrefab);
-        currentCoin.SetColor(currentTeam.TeamColor);
+        currentCoin.SetTeam(currentTeam);
         currentCoin.transform.position = coinDropPositions[selectedRow];
     }
 

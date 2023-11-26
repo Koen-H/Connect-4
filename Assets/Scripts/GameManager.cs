@@ -35,7 +35,6 @@ public class GameManager : MonoBehaviour
     }
 
 
-
     /// <summary>
     /// Init the game, such as making teams and the board
     /// </summary>

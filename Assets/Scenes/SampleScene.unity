@@ -555,17 +555,13 @@ MonoBehaviour:
   - playerName: Player 6
     playerId: 0
   teams:
-  - teamName: Team 1
+  - teamID: 1
+    teamName: Team 1
     teamColor: {r: 1, g: 0, b: 0, a: 0}
     teamPlayers: []
-  - teamName: Team 2
+  - teamID: 2
+    teamName: Team 2
     teamColor: {r: 1, g: 0.9719784, b: 0, a: 0}
-    teamPlayers: []
-  - teamName: Team 3
-    teamColor: {r: 0, g: 1, b: 0.03055644, a: 0}
-    teamPlayers: []
-  - teamName: Team 4
-    teamColor: {r: 1, g: 0, b: 0.875875, a: 0}
     teamPlayers: []
 --- !u!4 &564384764
 Transform:
@@ -727,6 +723,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardWidth: 7
   boardHeight: 6
+  connectWinCondition: 4
   coinSlotPrefab: {fileID: 5825958213365299730, guid: 62ede41d6e19a824cb98ac8362bf84b3,
     type: 3}
 --- !u!1 &1569669703

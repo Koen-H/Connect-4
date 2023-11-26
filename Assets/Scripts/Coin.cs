@@ -7,20 +7,22 @@ public class Coin : MonoBehaviour
     //Team
     [Tooltip("To which team does this coin belong to?")]
     private Team team;
+    public Team Team { get { return team; } }
 
 
     [Header("Rendering")]
     [SerializeField, Tooltip("Mesh renderer of the coin")]
     private MeshRenderer meshRenderer;
 
-    public void SetColor(Color newColor)
+    public void SetTeam(Team newTeam)
     {
-        meshRenderer.material.SetColor("_BaseColor", newColor);
+        team = newTeam;
+        SetColor(team.TeamColor);
     }
 
-    private void Awake()
+    private void SetColor(Color newColor)
     {
-
+        meshRenderer.material.SetColor("_BaseColor", newColor);
     }
 
 }
