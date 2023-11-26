@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering.UI;
 
 public class GameBoard : MonoBehaviour
 {
@@ -124,6 +123,11 @@ public class GameBoard : MonoBehaviour
         if (winningSlots.Count > 0)
         {
             winningSlots.Distinct();
+            //Enable the glow on the winning coins!
+            foreach (CoinSlot slot in winningSlots)
+            {
+                slot.GetCoin().StartGlow();
+            }
             Debug.Log("WINNER!");
         }
 
