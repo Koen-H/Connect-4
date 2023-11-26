@@ -5,7 +5,8 @@ using UnityEngine;
 public class Coin : MonoBehaviour
 {
     //Team
-    //Color
+    [Tooltip("To which team does this coin belong to?")]
+    private Team team;
 
 
     [Header("Rendering")]

@@ -21,14 +21,11 @@ public class GameBoard : MonoBehaviour
     
     //Keep track how many coins there are in each row
     private int[] rowHeight;
-
-    private void Awake()
-    {
-        GenerateBoard();
-    }
+    private Vector3[] coinDropPositions;
+    public Vector3[] CoinDropPositions {  get { return coinDropPositions; } }
 
 
-    private void GenerateBoard()
+    public void GenerateBoard()
     {
         coinSlots = new CoinSlot[boardWidth, boardHeight];
         rowHeight = new int[boardWidth];
@@ -41,20 +38,15 @@ public class GameBoard : MonoBehaviour
                 newInstance.gameObject.name = $"CoinSlot {x},{y}";
                 newInstance.transform.localPosition = new Vector3(x, y, 0);
                 coinSlots[x, y] = newInstance;
-
             }
         }
-    }
-
-    public Vector3[] GetCoinDropPositions()
-    {
-        Vector3[] dropPositions = new Vector3[boardWidth];
+        //Create coin Drop positions
+        coinDropPositions = new Vector3[boardWidth];
         for (int x = 0; x < boardWidth; x++)
         {
             //TODO: see vector3
-            dropPositions[x] = coinSlots[x, boardHeight - 1].transform.position + new Vector3(0, 0.75f, 0);
+            coinDropPositions[x] = coinSlots[x, boardHeight - 1].transform.position + new Vector3(0, 0.75f, 0);
         }
-        return dropPositions;
     }
 
 
@@ -65,10 +57,5 @@ public class GameBoard : MonoBehaviour
         rowHeight[row]++;
     }
 
-
-    private void Update()
-    {
-
-    }
 
 }

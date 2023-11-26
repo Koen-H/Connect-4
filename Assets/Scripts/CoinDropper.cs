@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class CoinDropper : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class CoinDropper : MonoBehaviour
 
     private int selectedRow = 0;
 
+    public UnityEvent OnCoinDropped = new();
+
     [SerializeField]
     GameBoard gameBoard;
 
@@ -20,9 +23,15 @@ public class CoinDropper : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        coinDropPositions = gameBoard.GetCoinDropPositions();
-        CreateCoin();
+        GameManager.Singleton.OnGameInitialized.AddListener(Initalize);
     }
+
+    private void Initalize()
+    {
+        coinDropPositions = gameBoard.CoinDropPositions;
+
+    }
+
 
     //Temporary
     void Update()
@@ -38,9 +47,10 @@ public class CoinDropper : MonoBehaviour
         
     }
 
-    void CreateCoin()
+    public void CreateCoin(Team currentTeam)
     {
         currentCoin = Instantiate(coinPrefab);
+        currentCoin.SetColor(currentTeam.TeamColor);
         currentCoin.transform.position = coinDropPositions[selectedRow];
     }
 
@@ -53,6 +63,6 @@ public class CoinDropper : MonoBehaviour
     void DropCoin()
     {
         gameBoard.InsertCoin(currentCoin, selectedRow);
-        CreateCoin();
+        OnCoinDropped.Invoke();
     }
 }
