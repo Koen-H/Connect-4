@@ -2,9 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Netcode;
 using UnityEngine;
 
-public class GameBoard : MonoBehaviour
+public class GameBoard : NetworkBehaviour
 {
     [Header("Board settings")]
     [SerializeField, Tooltip("The width of the gameboard")]
@@ -13,32 +14,40 @@ public class GameBoard : MonoBehaviour
     [SerializeField, Tooltip("The height of the gameboard")]
     private int boardHeight = 6;
 
-    [SerializeField]
+    [SerializeField, Tooltip("How many connects are required to get a win?")]
     private int connectWinCondition = 4;
 
+    [Header("Board prefabs")]
     [SerializeField, Tooltip("Prefab of a singular boardslot")]
     private CoinSlot coinSlotPrefab;
-
 
     [SerializeField, Tooltip("Prefab of a singular rowColider used to get the row via raycast")]
     private RowCollider rowColiderPrefab;
 
-
+    /// <summary>
+    /// 2D map of the gameBoard
+    /// </summary>
     private CoinSlot[,] coinSlots;
     public CoinSlot[,] CoinSlots { get { return coinSlots; } }
 
     //Keep track how many coins there are in each row
-    private int[] rowHeight;
+    private NetworkList<int> rowHeight = new();
+    //Positions above the board where the coin will be visually displayed before dropping
     private Vector3[] coinDropPositions;
     public Vector3[] CoinDropPositions { get { return coinDropPositions; } }
 
 
     public void GenerateBoard()
     {
-        coinSlots = new CoinSlot[boardWidth, boardHeight];
-        rowHeight = new int[boardWidth];
-        coinDropPositions = new Vector3[boardWidth];
+        //Destroy all children to destroy potential previous board.
 
+        coinSlots = new CoinSlot[boardWidth, boardHeight];
+        rowHeight = new NetworkList<int>();
+        for (int i = 0; i < boardWidth; i++)
+        {
+            new NetworkList<int>().Add(0);
+        }
+        coinDropPositions = new Vector3[boardWidth];
 
         //Row colliders are placed in the center of the board
         int rowColHeight = (boardHeight) / 2;
@@ -160,18 +169,26 @@ public class GameBoard : MonoBehaviour
 
 
     /// <summary>
-    /// Insert the coin in a specific row
+    /// Tries to insert the coin in the given row
     /// </summary>
     /// <param name="insertedCoin">Coin to insert</param>
     /// <param name="row">The row</param>
-    public void InsertCoin(Coin insertedCoin, int row)
+    /// <returns>Returns false if the row is already filled</returns>
+    public bool TryInsertCoin(Coin insertedCoin, int row)
     {
+        //Get the current height of that row
         int currentHeight = rowHeight[row];
+
+        //Row already filled!
+        if (currentHeight == boardHeight) return false;
+
         CoinSlot insertedCoinSlot = coinSlots[row, currentHeight];
         insertedCoinSlot.FillSlot(insertedCoin);
-        insertedCoin.transform.position = coinSlots[row, currentHeight].transform.position;
+        insertedCoin.MoveTo(coinSlots[row, currentHeight].transform.position);
+
         rowHeight[row]++;
         CheckForWin();
+        return true;
     }
 
 

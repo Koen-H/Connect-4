@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using Unity.Netcode;
 using UnityEngine;
 
 [System.Serializable]
-public class Team
+public class Team : INetworkSerializable
 {
     [SerializeField]
     private int teamID;
@@ -22,6 +24,15 @@ public class Team
     {
 
     }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref teamID);
+        serializer.SerializeValue(ref teamName);
+        serializer.SerializeValue(ref teamColor);
+    }
+
+
 
     public void AddPlayer(Player newPlayer)
     {

@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     private static GameManager instance;
     public static GameManager Singleton
@@ -15,20 +17,32 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    [SerializeField]
-    private GameBoard board;
-    [SerializeField]
-    private LobbyManager lobbyManager;
-    [SerializeField]
-    private OrderManager orderManager;
 
-    public UnityEvent OnGameInitialized = new();
+    [SerializeField]
+    private GameBoard gameBoardPrefab;
+    //[SerializeField]
+    //private OrderManager orderManager;
+
+
+
+    [SerializeField]
+    private GameBoard gameBoard;
+    public GameBoard GameBoard { get { return gameBoard; } }
+
+    //[SerializeField]
+    //private LobbyManager lobbyManager;
+    //[SerializeField]
+    //private OrderManager orderManager;
+
+    public UnityEvent OnGameBeginInitialize = new();
+    public UnityEvent OnGameAfterInitialize = new();
+
+    public UnityEvent OnGameStart = new();
 
 
     private void Awake()
     {
         if(instance != null) {
-            Destroy(this.gameObject);
             return;
         }
         instance = this;
@@ -40,16 +54,20 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void InitGame()
     {
-        board.GenerateBoard();
-        lobbyManager.CreateTeams();
-        orderManager.CreateOrder();
+        //Instantiate the gameBoard
+        gameBoard = Instantiate(gameBoardPrefab);
 
-        OnGameInitialized.Invoke();
-        StartGame();
+        OnGameBeginInitialize.Invoke();
+        gameBoard.GenerateBoard();
+
+        //orderManager.CreateOrder();
+
+        OnGameAfterInitialize.Invoke();
     }
 
     public void StartGame()
     {
-        orderManager.OnGameStart();
+       // orderManager.OnGameStart();
+        OnGameStart.Invoke();
     }
 }

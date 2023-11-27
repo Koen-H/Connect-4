@@ -1,44 +1,59 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
+/// <summary>
+/// Coin dropper controls the position of the coin using player input.
+/// </summary>
 public class CoinDropper : MonoBehaviour
 {
-    [SerializeField]
-    private Coin coinPrefab;
-    [Tooltip("The coin currently selected, the next one to drop")]
     private Coin currentCoin;
 
+    [SerializeField]
+    private Coin coinPrefab;
+
+
+    [SerializeField]
+    private GameBoard gameBoard;
+
+    //NetworkVariable
     private int selectedRow = 0;
 
     public UnityEvent OnCoinDropped = new();
-
-    [SerializeField]
-    GameBoard gameBoard;
 
     [SerializeField, Tooltip("The row collider layer")]
     private LayerMask rowColliderLayer;
 
     private Vector3[] coinDropPositions;
 
+
     // Start is called before the first frame update
     void Start()
     {
-        GameManager.Singleton.OnGameInitialized.AddListener(Initalize);
+        GameManager.Singleton.OnGameAfterInitialize.AddListener(Initalize);
     }
 
     private void Initalize()
     {
         coinDropPositions = gameBoard.CoinDropPositions;
-
     }
 
 
     void Update()
     {
+        FindRow();
+        if (Input.GetMouseButtonDown(0)) TryDropCoin();
+    }
 
+
+    /// <summary>
+    /// Find the row the player is currently hovering
+    /// </summary>
+    private void FindRow()
+    {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, rowColliderLayer))
         {
@@ -47,25 +62,34 @@ public class CoinDropper : MonoBehaviour
                 SelectRow(rowCol.Row);
             }
         }
-        if (Input.GetMouseButtonDown(0)) DropCoin();
     }
 
     public void CreateCoin(Team currentTeam)
     {
         currentCoin = Instantiate(coinPrefab);
         currentCoin.SetTeam(currentTeam);
-        currentCoin.transform.position = coinDropPositions[selectedRow];
+        Vector3 targetPos = coinDropPositions[selectedRow];
+        currentCoin.transform.position = targetPos;
+        currentCoin.MoveTo(targetPos);
     }
 
     void SelectRow(int newSelectedRow = 0)
     {
-        currentCoin.transform.position = coinDropPositions[newSelectedRow];
+        //Move coin to row
+        currentCoin.MoveTo(coinDropPositions[newSelectedRow]);
+
         selectedRow = newSelectedRow;
     }
 
-    void DropCoin()
+    /// <summary>
+    /// Try to drop the coin if possible
+    /// </summary>
+    void TryDropCoin()
     {
-        gameBoard.InsertCoin(currentCoin, selectedRow);
-        OnCoinDropped.Invoke();
+        if (gameBoard.TryInsertCoin(currentCoin, selectedRow))
+        {
+            OnCoinDropped.Invoke();
+
+        }
     }
 }

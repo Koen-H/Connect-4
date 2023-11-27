@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Coin : MonoBehaviour
@@ -8,12 +9,12 @@ public class Coin : MonoBehaviour
     private Team team;
     public Team Team { get { return team; } }
 
-    private bool isGlowing = false;
-
-
     [Header("Rendering")]
-    [SerializeField, Tooltip("Mesh renderer of the coin")]
+    [SerializeField, Tooltip("Mesh renderer of the coin, used for setting the color and making it glow")]
     private MeshRenderer meshRenderer;
+
+
+    private bool isGlowing = false;
 
     public void SetTeam(Team newTeam)
     {
@@ -32,7 +33,25 @@ public class Coin : MonoBehaviour
         StartCoroutine(GlowLerp());
     }
 
+    public void MoveTo(Vector3 newTargetPos)
+    {
+        targetPos = newTargetPos;
+    }
 
+    private Vector3 targetPos;
+
+    private void Update()
+    {
+        if (targetPos != null)
+        {
+            // Calculate the direction and distance to the target
+            Vector3 direction = targetPos - transform.position;
+            float distanceToMove = 10 * Time.deltaTime;
+
+            // Move the GameObject towards the target position
+            transform.Translate(direction.normalized * Mathf.Min(distanceToMove, direction.magnitude), Space.World);
+        }
+    }
 
 
     private IEnumerator GlowLerp()
