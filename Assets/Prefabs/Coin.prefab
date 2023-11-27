@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3347673746864879288}
   - component: {fileID: 2156843520121237741}
-  - component: {fileID: 4255571484875668511}
   m_Layer: 0
   m_Name: Coin
   m_TagString: Untagged
@@ -47,26 +46,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshRenderer: {fileID: 9174146502522507653}
---- !u!114 &4255571484875668511
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 374967372604566741}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13e077e2f6e25d14a82769bdbc4fea39, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  coinPrefab: {fileID: 0}
-  OnCoinDropped:
-    m_PersistentCalls:
-      m_Calls: []
-  gameBoard: {fileID: 0}
-  rowColliderLayer:
-    serializedVersion: 2
-    m_Bits: 0
 --- !u!1001 &7534671722966781185
 PrefabInstance:
   m_ObjectHideFlags: 0

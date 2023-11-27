@@ -1,14 +1,13 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
 /// <summary>
-/// Coin dropper controls the position of the coin using player input.
+/// Coin dropper handles player input by 
+/// 
+/// The ownership of this object is moved between clients, allowing only the owner to change the position of the coin.
 /// </summary>
-public class CoinDropper : MonoBehaviour
+public class CoinDropper : NetworkBehaviour
 {
     private Coin currentCoin;
 
@@ -19,8 +18,7 @@ public class CoinDropper : MonoBehaviour
     [SerializeField]
     private GameBoard gameBoard;
 
-    //NetworkVariable
-    private int selectedRow = 0;
+    private NetworkVariable<int> selectedRow = new(0,default,NetworkVariableWritePermission.Server);
 
     public UnityEvent OnCoinDropped = new();
 
@@ -33,10 +31,15 @@ public class CoinDropper : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        GameManager.Singleton.OnGameAfterInitialize.AddListener(Initalize);
+        //Whenever the gameobard is generated, retrieve the new drop positions for each row.
+        gameBoard.OnGameBoardGenerated.AddListener(UpdateDropPositions);
+        selectedRow.OnValueChanged += UpdateCoinPosition;
     }
 
-    private void Initalize()
+    /// <summary>
+    /// Retrieves the updated coinDropPositions from the gameboard
+    /// </summary>
+    private void UpdateDropPositions()
     {
         coinDropPositions = gameBoard.CoinDropPositions;
     }
@@ -44,13 +47,15 @@ public class CoinDropper : MonoBehaviour
 
     void Update()
     {
+        //Ownership is granted to the client who's turn it is
+        if (!IsOwner) return;
         FindRow();
         if (Input.GetMouseButtonDown(0)) TryDropCoin();
     }
 
 
     /// <summary>
-    /// Find the row the player is currently hovering
+    /// Find the row the player is currently hovering over
     /// </summary>
     private void FindRow()
     {
@@ -59,37 +64,39 @@ public class CoinDropper : MonoBehaviour
         {
             if (hitInfo.collider.gameObject.TryGetComponent<RowCollider>(out RowCollider rowCol))
             {
-                SelectRow(rowCol.Row);
+                selectedRow.Value = rowCol.Row;
             }
         }
     }
+
 
     public void CreateCoin(Team currentTeam)
     {
         currentCoin = Instantiate(coinPrefab);
         currentCoin.SetTeam(currentTeam);
-        Vector3 targetPos = coinDropPositions[selectedRow];
+        Vector3 targetPos = coinDropPositions[selectedRow.Value];
         currentCoin.transform.position = targetPos;
         currentCoin.MoveTo(targetPos);
     }
 
-    void SelectRow(int newSelectedRow = 0)
-    {
-        //Move coin to row
-        currentCoin.MoveTo(coinDropPositions[newSelectedRow]);
 
-        selectedRow = newSelectedRow;
+    private void UpdateCoinPosition(int oldRow, int newRow)
+    {
+        currentCoin.MoveTo(coinDropPositions[newRow]);
     }
+
 
     /// <summary>
     /// Try to drop the coin if possible
     /// </summary>
     void TryDropCoin()
     {
-        if (gameBoard.TryInsertCoin(currentCoin, selectedRow))
+        //Check locally if the coin can be dropped
+        if (gameBoard.TryInsertCoin(currentCoin, selectedRow.Value))
         {
             OnCoinDropped.Invoke();
-
         }
     }
+
+
 }

@@ -17,9 +17,6 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-
-    [SerializeField]
-    private GameBoard gameBoardPrefab;
     //[SerializeField]
     //private OrderManager orderManager;
 
@@ -50,15 +47,12 @@ public class GameManager : NetworkBehaviour
 
 
     /// <summary>
-    /// Init the game, such as making teams and the board
+    /// Initialize the game, by generating the gameBoard and teams order.
     /// </summary>
     public void InitGame()
     {
-        //Instantiate the gameBoard
-        gameBoard = Instantiate(gameBoardPrefab);
-
         OnGameBeginInitialize.Invoke();
-        gameBoard.GenerateBoard();
+        gameBoard.GenerateBoardClientRpc();
 
         //orderManager.CreateOrder();
 

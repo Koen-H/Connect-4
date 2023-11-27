@@ -54,11 +54,6 @@ public class SceneChangeManager : NetworkBehaviour
         NetworkManager.Singleton.SceneManager.OnSceneEvent -= SceneManager_OnSceneEvent;
     }
 
-    public void LoadLevel()
-    {
-        NetworkManager.SceneManager.LoadScene("LevelScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
-    }
-
     /// <summary>
     /// All potential scene events
     /// </summary>

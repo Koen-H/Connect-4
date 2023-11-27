@@ -4,13 +4,10 @@ using UnityEngine;
 using UnityEngine.Events;
 
 /// <summary>
-/// Ordermanager keeps track of the order players get their turn
+/// Ordermanager keeps track of the order players get their turn.
 /// </summary>
 public class OrderManager : MonoBehaviour
 {
-    [SerializeField]
-    GameLobbySO gameLobby;
-
     [SerializeField, Tooltip("In what order will the game be played?")]
     private List<Team> teamsOrder;
 
@@ -18,7 +15,7 @@ public class OrderManager : MonoBehaviour
     private List<Player> playerOrder;
 
     [SerializeField]
-    CoinDropper coinDropper;
+    private CoinDropper coinDropper;
 
     //Keep track on how many turns there have been
     private int currentTurn = 0;
@@ -28,7 +25,6 @@ public class OrderManager : MonoBehaviour
 
     private void Awake()
     {
-        if(coinDropper == null) GetComponent<CoinDropper>();
         coinDropper.OnCoinDropped.AddListener(AfterCoinDrop);
     }
 
@@ -36,7 +32,7 @@ public class OrderManager : MonoBehaviour
     public void CreateOrder()
     {
         //Create a team order
-        teamsOrder = new (gameLobby.Teams);
+        //teamsOrder = new (gameLobby.Teams);
         teamsOrder.Shuffle();
 
         playerOrder = new();

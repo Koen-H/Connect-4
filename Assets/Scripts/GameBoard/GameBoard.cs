@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Events;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 public class GameBoard : NetworkBehaviour
 {
@@ -31,21 +33,31 @@ public class GameBoard : NetworkBehaviour
     public CoinSlot[,] CoinSlots { get { return coinSlots; } }
 
     //Keep track how many coins there are in each row
-    private NetworkList<int> rowHeight = new();
+    private NetworkList<int> rowHeight = new NetworkList<int>();
     //Positions above the board where the coin will be visually displayed before dropping
     private Vector3[] coinDropPositions;
     public Vector3[] CoinDropPositions { get { return coinDropPositions; } }
 
+    /// <summary>
+    /// Called when the gameboard finished generating.
+    /// </summary>
+    public UnityEvent OnGameBoardGenerated = new();
 
-    public void GenerateBoard()
+    private void Awake()
+    {
+    }
+
+    private void GenerateBoard()
     {
         //Destroy all children to destroy potential previous board.
-
         coinSlots = new CoinSlot[boardWidth, boardHeight];
-        rowHeight = new NetworkList<int>();
-        for (int i = 0; i < boardWidth; i++)
+        if (IsServer)
         {
-            new NetworkList<int>().Add(0);
+            rowHeight.Clear();//Make row list empty again
+            for (int i = 0; i < boardWidth; i++)
+            {
+                rowHeight.Add(0);
+            }
         }
         coinDropPositions = new Vector3[boardWidth];
 
@@ -73,10 +85,21 @@ public class GameBoard : NetworkBehaviour
             rowCol.Row = x;
             rowCol.SetColliderHeight(boardHeight + 1);
         }
+        OnGameBoardGenerated.Invoke();
     }
 
     /// <summary>
-    /// Starting from bottom left, check above, diagnoally and to the right
+    /// Tell clients to generate the board
+    /// </summary>
+    [ClientRpc]
+    public void GenerateBoardClientRpc()
+    {
+        GenerateBoard();
+    }
+
+
+    /// <summary>
+    /// Starting from bottom left, loop through each slot and check above, diagnoally and to the right of the slot
     /// </summary>
     public void CheckForWin()
     {
