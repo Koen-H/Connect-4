@@ -417,7 +417,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1021585558}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 3, y: 4, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -477,6 +477,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1098015025}
+  - component: {fileID: 1098015027}
   - component: {fileID: 1098015024}
   - component: {fileID: 1098015026}
   m_Layer: 0
@@ -542,6 +543,20 @@ MonoBehaviour:
   SpawnWithObservers: 1
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
+--- !u!114 &1098015027
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1098015023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ceab490a0abee54baea90fcb4f7b4f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameLobbyData: {fileID: 11400000, guid: 8ac6d85c637843f4986f7e3ec8e45260, type: 2}
+  teamsOrder: []
 --- !u!1001 &3787346300985741303
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -620,6 +635,11 @@ PrefabInstance:
       propertyPath: gameBoard
       value: 
       objectReference: {fileID: 974831979}
+    - target: {fileID: 6511227618462364656, guid: 1fe7c9cce267c8f49ab100628d4995f6,
+        type: 3}
+      propertyPath: orderManager
+      value: 
+      objectReference: {fileID: 1098015027}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

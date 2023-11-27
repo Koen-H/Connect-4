@@ -1,3 +1,4 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
@@ -20,7 +21,7 @@ public class CoinDropper : NetworkBehaviour
 
     private NetworkVariable<int> selectedRow = new(0,default,NetworkVariableWritePermission.Server);
 
-    public UnityEvent OnCoinDropped = new();
+    public event Action OnCoinDropped = delegate { };
 
     [SerializeField, Tooltip("The row collider layer")]
     private LayerMask rowColliderLayer;
@@ -28,11 +29,12 @@ public class CoinDropper : NetworkBehaviour
     private Vector3[] coinDropPositions;
 
 
+
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         //Whenever the gameobard is generated, retrieve the new drop positions for each row.
-        gameBoard.OnGameBoardGenerated.AddListener(UpdateDropPositions);
+        gameBoard.OnGameBoardGenerated += UpdateDropPositions;
         selectedRow.OnValueChanged += UpdateCoinPosition;
     }
 
@@ -41,6 +43,7 @@ public class CoinDropper : NetworkBehaviour
     /// </summary>
     private void UpdateDropPositions()
     {
+        Debug.Log("updated coin drop positions");
         coinDropPositions = gameBoard.CoinDropPositions;
     }
 
@@ -49,6 +52,7 @@ public class CoinDropper : NetworkBehaviour
     {
         //Ownership is granted to the client who's turn it is
         if (!IsOwner) return;
+        if(currentCoin == null) return;
         FindRow();
         if (Input.GetMouseButtonDown(0)) TryDropCoin();
     }
@@ -74,6 +78,8 @@ public class CoinDropper : NetworkBehaviour
     {
         currentCoin = Instantiate(coinPrefab);
         currentCoin.SetTeam(currentTeam);
+        Debug.Log(coinDropPositions.Length);
+        Debug.Log(selectedRow.Value);
         Vector3 targetPos = coinDropPositions[selectedRow.Value];
         currentCoin.transform.position = targetPos;
         currentCoin.MoveTo(targetPos);

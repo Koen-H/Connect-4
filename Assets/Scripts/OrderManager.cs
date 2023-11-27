@@ -1,42 +1,36 @@
-using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Events;
 
 /// <summary>
-/// Ordermanager keeps track of the order players get their turn.
+/// Ordermanager keeps track of the order players get their turn and grants ownership to that player.
 /// </summary>
-public class OrderManager : MonoBehaviour
+public class OrderManager : NetworkBehaviour
 {
+    [SerializeField, Tooltip("Reference to the gameLobbyData")]
+    private GameLobbySO gameLobbyData;
+
     [SerializeField, Tooltip("In what order will the game be played?")]
     private List<Team> teamsOrder;
 
-    [SerializeField]
-    private List<Player> playerOrder;
-
-    [SerializeField]
     private CoinDropper coinDropper;
 
     //Keep track on how many turns there have been
     private int currentTurn = 0;
 
-    public UnityEvent<List<Player>> OnOrderChanged;
-
-
     private void Awake()
     {
-        coinDropper.OnCoinDropped.AddListener(AfterCoinDrop);
+        coinDropper = GetComponent<CoinDropper>();
+        //coinDropper.OnCoinDropped.AddListener(AfterCoinDrop);
     }
 
-
+    /// <summary>
+    /// Creates the order the teams will play.
+    /// </summary>
     public void CreateOrder()
     {
-        //Create a team order
-        //teamsOrder = new (gameLobby.Teams);
+        teamsOrder = new(gameLobbyData.Teams);
         teamsOrder.Shuffle();
-
-        playerOrder = new();
-
     }
 
 
@@ -54,22 +48,7 @@ public class OrderManager : MonoBehaviour
     {
         currentTurn++;
         Team currentTeam = teamsOrder[currentTurn % teamsOrder.Count];
+        Player currentPlayer = currentTeam.GetCurrentPlayer();
         coinDropper.CreateCoin(currentTeam);
     }
-
-    /// <summary>
-    /// Change the turn to the next player
-    /// </summary>
-    private void ChangeTurn()
-    {
-        //Put the player that's currently first back to the end
-        Player firstPlayer = playerOrder[0];
-        playerOrder.RemoveAt(0);
-        playerOrder.Add(firstPlayer);
-
-        OnOrderChanged.Invoke(playerOrder);
-
-
-    }
-
 }

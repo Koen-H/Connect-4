@@ -33,7 +33,7 @@ public class GameBoard : NetworkBehaviour
     public CoinSlot[,] CoinSlots { get { return coinSlots; } }
 
     //Keep track how many coins there are in each row
-    private NetworkList<int> rowHeight = new NetworkList<int>();
+    private NetworkList<int> rowHeight;
     //Positions above the board where the coin will be visually displayed before dropping
     private Vector3[] coinDropPositions;
     public Vector3[] CoinDropPositions { get { return coinDropPositions; } }
@@ -41,10 +41,11 @@ public class GameBoard : NetworkBehaviour
     /// <summary>
     /// Called when the gameboard finished generating.
     /// </summary>
-    public UnityEvent OnGameBoardGenerated = new();
+    public event Action OnGameBoardGenerated = delegate { };
 
     private void Awake()
     {
+        rowHeight = new NetworkList<int>();
     }
 
     private void GenerateBoard()

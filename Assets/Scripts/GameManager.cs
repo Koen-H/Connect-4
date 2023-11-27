@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -17,25 +18,19 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-    //[SerializeField]
-    //private OrderManager orderManager;
-
-
+    [SerializeField]
+    private OrderManager orderManager;
 
     [SerializeField]
     private GameBoard gameBoard;
-    public GameBoard GameBoard { get { return gameBoard; } }
 
     //[SerializeField]
     //private LobbyManager lobbyManager;
     //[SerializeField]
     //private OrderManager orderManager;
 
-    public UnityEvent OnGameBeginInitialize = new();
-    public UnityEvent OnGameAfterInitialize = new();
 
-    public UnityEvent OnGameStart = new();
-
+    List<bool> gameLoadedOnClients;
 
     private void Awake()
     {
@@ -43,6 +38,7 @@ public class GameManager : NetworkBehaviour
             return;
         }
         instance = this;
+        gameBoard.OnGameBoardGenerated += (GameReadyServerRpc);
     }
 
 
@@ -51,17 +47,26 @@ public class GameManager : NetworkBehaviour
     /// </summary>
     public void InitGame()
     {
-        OnGameBeginInitialize.Invoke();
+        gameLoadedOnClients  = new List<bool>();
+        
+        orderManager.CreateOrder();
+        //Generate the board on all clients, this includes the server as the server is a host (server as client)
         gameBoard.GenerateBoardClientRpc();
-
-        //orderManager.CreateOrder();
-
-        OnGameAfterInitialize.Invoke();
     }
 
-    public void StartGame()
+    /// <summary>
+    /// As a client, let the server know that the gameboard loaded in
+    /// </summary>
+    [ServerRpc]
+    private void GameReadyServerRpc()
     {
-       // orderManager.OnGameStart();
-        OnGameStart.Invoke();
+        gameLoadedOnClients.Add(true);
+        //If every client loaded the game, start the game.
+        if (gameLoadedOnClients.Count == LobbyManager.Singleton.Clients.Count) StartGame();
+    }
+
+    private void StartGame()
+    {
+        orderManager.OnGameStart();
     }
 }
