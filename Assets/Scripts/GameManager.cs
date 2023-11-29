@@ -57,7 +57,7 @@ public class GameManager : NetworkBehaviour
     /// <summary>
     /// As a client, let the server know that the gameboard loaded in
     /// </summary>
-    [ServerRpc]
+    [ServerRpc(RequireOwnership =false)]
     private void GameReadyServerRpc()
     {
         gameLoadedOnClients.Add(true);

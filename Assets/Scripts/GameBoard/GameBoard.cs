@@ -26,40 +26,62 @@ public class GameBoard : NetworkBehaviour
     [SerializeField, Tooltip("Prefab of a singular rowColider used to get the row via raycast")]
     private RowCollider rowColiderPrefab;
 
+    private List<Coin> insertedCoins = new();
+
     /// <summary>
     /// 2D map of the gameBoard
     /// </summary>
     private CoinSlot[,] coinSlots;
     public CoinSlot[,] CoinSlots { get { return coinSlots; } }
 
+    public NetworkList<Vector2Int> winningCoinSlotsPositions;
+
     //Keep track how many coins there are in each row
+    //NOTE: Networked list instead of array because networkedArray doesnt exist.
     private NetworkList<int> rowHeight;
+
     //Positions above the board where the coin will be visually displayed before dropping
     private Vector3[] coinDropPositions;
-    public Vector3[] CoinDropPositions { get { return coinDropPositions; } }
 
     /// <summary>
     /// Called when the gameboard finished generating.
     /// </summary>
     public event Action OnGameBoardGenerated = delegate { };
+    public event Action<Vector3[]> OnCoinDropPositionsGenerated = delegate { };
 
     private void Awake()
     {
         rowHeight = new NetworkList<int>();
+        winningCoinSlotsPositions = new NetworkList<Vector2Int>();
+        winningCoinSlotsPositions.OnListChanged += OnWinningSlotsChanged;
     }
+    
 
-    private void GenerateBoard()
+    /// <summary>
+    /// Enable physics drop on coins, resets gameplay variables.
+    /// </summary>
+    public void ResetBoard()
     {
-        //Destroy all children to destroy potential previous board.
-        coinSlots = new CoinSlot[boardWidth, boardHeight];
+        foreach (Coin coin in insertedCoins) coin.EnableDropPhysics();
+        insertedCoins.Clear();
+        //TODO:: MArk slots as empty
+
         if (IsServer)
         {
+            winningCoinSlotsPositions.Clear();
             rowHeight.Clear();//Make row list empty again
             for (int i = 0; i < boardWidth; i++)
             {
                 rowHeight.Add(0);
             }
         }
+    }
+
+    private void GenerateBoard()
+    {
+        //Destroy all children to destroy potential previous board.
+        transform.DestroyAllChildObjects();
+        ResetBoard();
         coinDropPositions = new Vector3[boardWidth];
 
         //Row colliders are placed in the center of the board
@@ -72,6 +94,7 @@ public class GameBoard : NetworkBehaviour
             for (int y = 0; y < boardHeight; y++)
             {
                 CoinSlot newInstance = Instantiate(coinSlotPrefab, this.transform);
+                newInstance.SlotPosition = new Vector2Int(x, y);
                 newInstance.gameObject.name = $"CoinSlot {x},{y}";
                 newInstance.transform.localPosition = new Vector3(x, y, 0);
                 coinSlots[x, y] = newInstance;
@@ -86,6 +109,7 @@ public class GameBoard : NetworkBehaviour
             rowCol.Row = x;
             rowCol.SetColliderHeight(boardHeight + 1);
         }
+        OnCoinDropPositionsGenerated.Invoke(coinDropPositions);
         OnGameBoardGenerated.Invoke();
     }
 
@@ -181,16 +205,36 @@ public class GameBoard : NetworkBehaviour
         if (winningSlots.Count > 0)
         {
             winningSlots.Distinct();
-            //Enable the glow on the winning coins!
+            winningCoinSlotsPositions.Clear();
+
+            //Turn the winning slots in to vector2Int positions that can be send over the network.
             foreach (CoinSlot slot in winningSlots)
             {
-                slot.GetCoin().StartGlow();
+                winningCoinSlotsPositions.Add(slot.SlotPosition);
             }
             Debug.Log("WINNER!");
         }
-
     }
 
+    private void OnWinningSlotsChanged(NetworkListEvent<Vector2Int> changeEvent)
+    {
+        foreach (Vector2Int slotPosition in winningCoinSlotsPositions)
+        {
+            //Get the coin in the slot and start the winning glow effect on it.
+            coinSlots[slotPosition.x, slotPosition.y].GetCoin().StartGlow();
+        }
+    }
+
+    /// <summary>
+    /// Check if the coin can be dropped in this row, or if it's full already
+    /// </summary>
+    /// <param name="row"></param>
+    /// <returns></returns>
+    public bool CanDrop(int row)
+    {
+        int currentHeight = rowHeight[row];
+        return currentHeight != boardHeight;
+    }
 
     /// <summary>
     /// Tries to insert the coin in the given row
@@ -198,20 +242,21 @@ public class GameBoard : NetworkBehaviour
     /// <param name="insertedCoin">Coin to insert</param>
     /// <param name="row">The row</param>
     /// <returns>Returns false if the row is already filled</returns>
-    public bool TryInsertCoin(Coin insertedCoin, int row)
+    public bool InsertCoin(Coin insertedCoin, int row)
     {
         //Get the current height of that row
         int currentHeight = rowHeight[row];
 
-        //Row already filled!
-        if (currentHeight == boardHeight) return false;
-
         CoinSlot insertedCoinSlot = coinSlots[row, currentHeight];
         insertedCoinSlot.FillSlot(insertedCoin);
+        insertedCoin.transform.position = coinDropPositions[row];//Make sure the coin is above the slot before dropping it to prevent diagonal movement through the board.
         insertedCoin.MoveTo(coinSlots[row, currentHeight].transform.position);
-
-        rowHeight[row]++;
-        CheckForWin();
+        insertedCoins.Add(insertedCoin);
+        if (IsServer)
+        {
+            rowHeight[row]++;
+            if (IsServer) CheckForWin();
+        }
         return true;
     }
 

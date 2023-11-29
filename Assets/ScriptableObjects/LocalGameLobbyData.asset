@@ -12,13 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7b239cfb512af54b9b73de076f9d771, type: 3}
   m_Name: LocalGameLobbyData
   m_EditorClassIdentifier: 
-  Players: []
+  Players:
+  - playerName: Player 1
+    playerId: 0
+    ClientID: 0
+  - playerName: Player 2
+    playerId: 1
+    ClientID: 1
   Teams:
   - teamID: 0
     teamName: Team 1
     teamColor: {r: 1, g: 0.9603822, b: 0, a: 0}
-    teamPlayers: []
-  - teamID: 0
+    TeamTurn: 4
+    teamPlayers:
+    - playerName: Player 1
+      playerId: 0
+      ClientID: 0
+  - teamID: 1
     teamName: Team 2
     teamColor: {r: 1, g: 0.047547743, b: 0, a: 0}
-    teamPlayers: []
+    TeamTurn: 4
+    teamPlayers:
+    - playerName: Player 2
+      playerId: 1
+      ClientID: 1

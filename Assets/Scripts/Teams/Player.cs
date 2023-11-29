@@ -10,6 +10,9 @@ public class Player : INetworkSerializable
     public string playerName = "Player";
     public int playerId;
     private int teamID;
+
+    public ulong ClientID;
+
     public int TeamID {  get { return teamID; } }
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter

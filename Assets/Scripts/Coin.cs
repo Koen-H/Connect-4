@@ -14,8 +14,12 @@ public class Coin : MonoBehaviour
     [SerializeField, Tooltip("Mesh renderer of the coin, used for setting the color and making it glow")]
     private MeshRenderer meshRenderer;
 
+    [SerializeField]
+    private Rigidbody rb;
+
 
     private bool isGlowing = false;
+    private bool moveToTargetPos = false;
 
     public void SetTeam(Team newTeam)
     {
@@ -37,13 +41,23 @@ public class Coin : MonoBehaviour
     public void MoveTo(Vector3 newTargetPos)
     {
         targetPos = newTargetPos;
+        moveToTargetPos = true;
+    }
+
+    /// <summary>
+    /// Disables the kinematic property of the coin, allowing it to drop down to the bottom of the board like real coins
+    /// </summary>
+    public void EnableDropPhysics()
+    {
+        rb.isKinematic = false;
+        moveToTargetPos = false;
     }
 
     private Vector3 targetPos;
 
     private void Update()
     {
-        if (targetPos != null)
+        if (moveToTargetPos)
         {
             // Calculate the direction and distance to the target
             Vector3 direction = targetPos - transform.position;

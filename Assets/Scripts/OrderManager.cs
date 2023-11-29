@@ -21,14 +21,28 @@ public class OrderManager : NetworkBehaviour
     private void Awake()
     {
         coinDropper = GetComponent<CoinDropper>();
-        //coinDropper.OnCoinDropped.AddListener(AfterCoinDrop);
+       
     }
+
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        if(IsServer) coinDropper.OnCoinDropped += AfterCoinDrop;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+        if(IsServer) coinDropper.OnCoinDropped -= AfterCoinDrop;
+    }
+
 
     /// <summary>
     /// Creates the order the teams will play.
     /// </summary>
     public void CreateOrder()
     {
+        currentTurn = 0;//Reset the current turn back to 0. Teams can keep their teamturns to allow a fair play order within the teams.
         teamsOrder = new(gameLobbyData.Teams);
         teamsOrder.Shuffle();
     }
@@ -39,16 +53,28 @@ public class OrderManager : NetworkBehaviour
     /// </summary>
     public void OnGameStart()
     {
-        Team currentTeam = teamsOrder[currentTurn % teamsOrder.Count];
-        coinDropper.CreateCoin(currentTeam);
+        GranTurn();
     }
 
 
+    /// <summary>
+    /// Only happens on server side.
+    /// </summary>
     private void AfterCoinDrop()
     {
         currentTurn++;
+        GranTurn();
+    }
+    
+    /// <summary>
+    /// Grants the turn to the next team and player, and informs all clients to locally spawn a coin for that team.
+    /// </summary>
+    private void GranTurn()
+    {
         Team currentTeam = teamsOrder[currentTurn % teamsOrder.Count];
         Player currentPlayer = currentTeam.GetCurrentPlayer();
-        coinDropper.CreateCoin(currentTeam);
+        currentTeam.TeamTurn++;
+        coinDropper.NetworkObject.ChangeOwnership(currentPlayer.ClientID);//Grant ownership to the player that got the next turn.
+        coinDropper.CreateCoinClientRpc(currentTeam.TeamID);
     }
 }

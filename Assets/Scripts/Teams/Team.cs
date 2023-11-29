@@ -18,7 +18,7 @@ public class Team : INetworkSerializable
     public Color TeamColor { get { return teamColor; } }
 
 
-    private NetworkVariable<int> teamTurn = new NetworkVariable<int>();
+    public int TeamTurn = 1;
 
     [SerializeField, Tooltip("The players in the team")]
     private List<Player> teamPlayers = new List<Player>();
@@ -40,8 +40,7 @@ public class Team : INetworkSerializable
 
     public Player GetCurrentPlayer()
     {
-
-        return teamPlayers[teamTurn.Value % teamPlayers.Count];
+        return teamPlayers[TeamTurn % teamPlayers.Count];
     }
 
 

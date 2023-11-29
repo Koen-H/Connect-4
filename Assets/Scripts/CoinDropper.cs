@@ -15,13 +15,17 @@ public class CoinDropper : NetworkBehaviour
     [SerializeField]
     private Coin coinPrefab;
 
+    [SerializeField, Tooltip("Reference to the gameLobbyData")]
+    private GameLobbySO gameLobbyData;
+
+    public event Action OnCoinDropped;
+
 
     [SerializeField]
     private GameBoard gameBoard;
 
-    private NetworkVariable<int> selectedRow = new(0,default,NetworkVariableWritePermission.Server);
+    private NetworkVariable<int> selectedRow = new(0, default, NetworkVariableWritePermission.Owner);
 
-    public event Action OnCoinDropped = delegate { };
 
     [SerializeField, Tooltip("The row collider layer")]
     private LayerMask rowColliderLayer;
@@ -34,17 +38,16 @@ public class CoinDropper : NetworkBehaviour
     void Awake()
     {
         //Whenever the gameobard is generated, retrieve the new drop positions for each row.
-        gameBoard.OnGameBoardGenerated += UpdateDropPositions;
+        gameBoard.OnCoinDropPositionsGenerated += UpdateDropPositions;
         selectedRow.OnValueChanged += UpdateCoinPosition;
     }
 
     /// <summary>
     /// Retrieves the updated coinDropPositions from the gameboard
     /// </summary>
-    private void UpdateDropPositions()
+    private void UpdateDropPositions(Vector3[] newCoinDropPositions)
     {
-        Debug.Log("updated coin drop positions");
-        coinDropPositions = gameBoard.CoinDropPositions;
+        coinDropPositions = newCoinDropPositions;
     }
 
 
@@ -52,9 +55,9 @@ public class CoinDropper : NetworkBehaviour
     {
         //Ownership is granted to the client who's turn it is
         if (!IsOwner) return;
-        if(currentCoin == null) return;
+        if (currentCoin == null) return;
         FindRow();
-        if (Input.GetMouseButtonDown(0)) TryDropCoin();
+        if (Input.GetMouseButtonDown(0)) TryDropCoinServerRpc(selectedRow.Value);//We know this value is correct on the client that sends it
     }
 
 
@@ -74,12 +77,12 @@ public class CoinDropper : NetworkBehaviour
     }
 
 
-    public void CreateCoin(Team currentTeam)
+    [ClientRpc]
+    public void CreateCoinClientRpc(int teamID)
     {
+        Team team = gameLobbyData.GetTeam(teamID);
         currentCoin = Instantiate(coinPrefab);
-        currentCoin.SetTeam(currentTeam);
-        Debug.Log(coinDropPositions.Length);
-        Debug.Log(selectedRow.Value);
+        currentCoin.SetTeam(team);
         Vector3 targetPos = coinDropPositions[selectedRow.Value];
         currentCoin.transform.position = targetPos;
         currentCoin.MoveTo(targetPos);
@@ -93,15 +96,28 @@ public class CoinDropper : NetworkBehaviour
 
 
     /// <summary>
-    /// Try to drop the coin if possible
+    /// Tell the server to drop coin, will check if possible
     /// </summary>
-    void TryDropCoin()
+    /// <param name="dropInRow">The row selected</param>
+    [ServerRpc]
+    private void TryDropCoinServerRpc(int dropInRow)
     {
-        //Check locally if the coin can be dropped
-        if (gameBoard.TryInsertCoin(currentCoin, selectedRow.Value))
+        //NOTE: Send row as rpc param incase of latency in the networkvariable SelectedRow.
+        if (gameBoard.CanDrop(dropInRow))
         {
-            OnCoinDropped.Invoke();
+            //Inform all clients to drop in this row, this includes the server as the server is a host (server and client)
+            InsertCoinClientRpc(dropInRow);
+            OnCoinDropped?.Invoke();
         }
+    }
+
+    /// <summary>
+    /// Inform clients to drop the coin in the selected row.
+    /// </summary>
+    [ClientRpc]
+    private void InsertCoinClientRpc(int dropInRow)
+    {
+        gameBoard.InsertCoin(currentCoin, dropInRow);
     }
 
 

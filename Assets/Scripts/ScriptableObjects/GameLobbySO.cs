@@ -11,6 +11,7 @@ public class GameLobbySO : ScriptableObject
     [SerializeField]
     public List<Team> Teams;
 
+    
 
     /// <summary>
     /// Generate teams with random players
@@ -24,6 +25,17 @@ public class GameLobbySO : ScriptableObject
         {
             Teams[i % teamsAmount].AddPlayer(shuffledList[i]);
         }
+    }
+
+    /// <summary>
+    /// Get a team by teamID
+    /// </summary>
+    /// <param name="requestedTeamID">the teamID</param>
+    /// <returns></returns>
+    public Team GetTeam(int requestedTeamID)
+    {
+
+        return Teams[requestedTeamID];
     }
 
 }
