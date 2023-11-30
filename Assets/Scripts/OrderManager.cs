@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -20,10 +21,11 @@ public class OrderManager : NetworkBehaviour
     //Keep track on how many turns there have been
     private int currentTurn = 0;
 
+    private NetworkVariable<Player> currentPlayer = new();
+
     private void Awake()
     {
         coinDropper = GetComponent<CoinDropper>();
-       
     }
 
     public override void OnNetworkSpawn()
@@ -78,8 +80,8 @@ public class OrderManager : NetworkBehaviour
         int currentIndex = currentTurn % teamsOrder.Count;
         Team currentTeam = teamsOrder[currentIndex];
         teamTurns[currentIndex]++;
-        Player currentPlayer = gameLobbyData.GetCurrentPlayer(currentTeam, teamTurns[currentIndex]);
-        coinDropper.NetworkObject.ChangeOwnership(currentPlayer.ClientID);//Grant ownership to the player that got the next turn.
+        currentPlayer.Value = gameLobbyData.GetCurrentPlayer(currentTeam, teamTurns[currentIndex]);
+        coinDropper.NetworkObject.ChangeOwnership(currentPlayer.Value.ClientID);//Grant ownership to the player that got the next turn.
         coinDropper.CreateCoinClientRpc(currentTeam.TeamID);
     }
 }

@@ -55,7 +55,16 @@ public class GameBoard : NetworkBehaviour
         winningCoinSlotsPositions = new NetworkList<Vector2Int>();
         winningCoinSlotsPositions.OnListChanged += OnWinningSlotsChanged;
     }
-    
+
+    /// <summary>
+    /// Tell the clients to reset the board.
+    /// </summary>
+    [ClientRpc]
+    public void ResetBoardClientRpc()
+    {
+        ResetBoard();
+    }
+
 
     /// <summary>
     /// Enable physics drop on coins, resets gameplay variables.

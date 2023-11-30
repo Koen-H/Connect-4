@@ -12,9 +12,9 @@ using Unity.Services.Relay.Models;
 using UnityEngine;
 
 /// <summary>
-/// Manages the server,
+/// Handles the server setup with unity's relay and lobby
 /// </summary>
-public class ServerManager : MonoBehaviour
+public class ServerManager : NetworkBehaviour
 {
     [SerializeField]
     [Tooltip("The max amount of players allowed to connect to the server")]
@@ -33,11 +33,15 @@ public class ServerManager : MonoBehaviour
     private Lobby currentLobby;
 
 
-    private async void StartServer()
+    /// <summary>
+    /// Start a server and load the game scene.
+    /// </summary>
+    public async void StartServer()
     {
         if (useUnityRelayServices) await CreateRelayConnection();
 
         NetworkManager.Singleton.StartHost();
+        NetworkManager.SceneManager.LoadScene("LobbyScene",UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
 
@@ -66,9 +70,9 @@ public class ServerManager : MonoBehaviour
         DataObject dataObject = new DataObject(DataObject.VisibilityOptions.Public, JoinCode);
 
         createLobbyOption.Data.Add("JOIN_CODE", dataObject);
-        currentLobby = await Lobbies.Instance.CreateLobbyAsync("Pirates killed lobby", maxPlayers, createLobbyOption);
-        Debug.Log(currentLobby.LobbyCode);
-        Debug.Log(currentLobby.Data["JOIN_CODE"].Value);
+        currentLobby = await Lobbies.Instance.CreateLobbyAsync("MyConnect4 lobby", maxPlayers, createLobbyOption);
+        Debug.Log($"LobbyCode = {currentLobby.LobbyCode}");
+        Debug.Log($"Joincode = {currentLobby.Data["JOIN_CODE"].Value}");
         StartCoroutine(HeartBeatLobbyCoroutine());
 
     }
