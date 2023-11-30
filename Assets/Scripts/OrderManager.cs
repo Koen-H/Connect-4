@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using static GameManager;
 
 /// <summary>
 /// Ordermanager keeps track of the order players get their turn and grants ownership to that player.
@@ -22,6 +23,7 @@ public class OrderManager : NetworkBehaviour
     private int currentTurn = 0;
 
     private NetworkVariable<Player> currentPlayer = new();
+    public NetworkVariable<Player>.OnValueChangedDelegate OnCurrentPlayerChanged { get { return currentPlayer.OnValueChanged; } set { currentPlayer.OnValueChanged = value; } }
 
     private void Awake()
     {

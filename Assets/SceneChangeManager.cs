@@ -63,7 +63,7 @@ public class SceneChangeManager : NetworkBehaviour
     /// <param name="clientDisconnect"></param>
     private void OnDisconnect(ulong clientDisconnect)
     {
-        SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+        SceneManager.LoadScene("MainScene", LoadSceneMode.Single);
     }
 
     /// <summary>

@@ -45,7 +45,6 @@ public class LobbyManager : NetworkBehaviour
     private void Start() {
 
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientConnectionLost;
-        SceneChangeManager.Singleton.OnAllLoadCompleteServerSide += OnEveryoneLoadedScene;
     }
 
 
@@ -107,18 +106,7 @@ public class LobbyManager : NetworkBehaviour
         NetworkManager.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
     }
 
-    /// <summary>
-    /// Once everyone in the lobby has loaded a specific scene, do something on the scene (Server side)
-    /// </summary>
-    /// <param name="sceneEvent"></param>
-    public void OnEveryoneLoadedScene(SceneEvent sceneEvent)
-    {
-        //EVeryone finished the gameScene, tell the gameManager in this scene to start loading the game
-        if(sceneEvent.SceneName == "GameScene")
-        {
-            GameManager.Singleton.InitGame();
-        }
-    }
+
 
 
     //public void CreateTeams()

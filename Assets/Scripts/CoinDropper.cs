@@ -20,7 +20,6 @@ public class CoinDropper : NetworkBehaviour
 
     public event Action OnCoinDropped;
 
-
     [SerializeField]
     private GameBoard gameBoard;
 
@@ -32,6 +31,10 @@ public class CoinDropper : NetworkBehaviour
 
     private Vector3[] coinDropPositions;
 
+    private bool playerInputEnabled = false;
+
+    [SerializeField]
+    private GameManager gameManager;
 
 
     // Start is called before the first frame update
@@ -40,7 +43,14 @@ public class CoinDropper : NetworkBehaviour
         //Whenever the gameobard is generated, retrieve the new drop positions for each row.
         gameBoard.OnCoinDropPositionsGenerated += UpdateDropPositions;
         selectedRow.OnValueChanged += UpdateCoinPosition;
+        gameManager.OnGameStateChange += OnGameStateChange;
     }
+
+    private void OnGameStateChange(GameManager.GameState oldState, GameManager.GameState newState)
+    {
+        playerInputEnabled = newState == GameManager.GameState.Playing;
+    }
+
 
     /// <summary>
     /// Retrieves the updated coinDropPositions from the gameboard
@@ -53,8 +63,9 @@ public class CoinDropper : NetworkBehaviour
 
     void Update()
     {
-        //Ownership is granted to the client who's turn it is
+        //Ownership is granted to the client who's turn it is, if there is no ownership the client is not allowed to change values off the current coin.
         if (!IsOwner) return;
+        if (!playerInputEnabled) return;
         if (currentCoin == null) return;
         FindRow();
         if (Input.GetMouseButtonDown(0)) TryDropCoinServerRpc(selectedRow.Value);//We know this value is correct on the client that sends it
@@ -83,11 +94,11 @@ public class CoinDropper : NetworkBehaviour
         Team team = gameLobbyData.GetTeamByID(teamID);
         currentCoin = Instantiate(coinPrefab);
         currentCoin.SetTeam(team);
+
         Vector3 targetPos = coinDropPositions[selectedRow.Value];
         currentCoin.transform.position = targetPos;
         currentCoin.MoveTo(targetPos);
     }
-
 
     private void UpdateCoinPosition(int oldRow, int newRow)
     {

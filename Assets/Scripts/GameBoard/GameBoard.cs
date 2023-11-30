@@ -34,7 +34,7 @@ public class GameBoard : NetworkBehaviour
     private CoinSlot[,] coinSlotsGrid;
     public CoinSlot[,] CoinSlotsGrid { get { return coinSlotsGrid; } }
 
-    public NetworkList<Vector2Int> winningCoinSlotsPositions;
+    private NetworkList<Vector2Int> winningCoinSlotsPositions;
 
     //Keep track how many coins there are in each row
     //NOTE: Networked list instead of array because networkedArray doesnt exist.
@@ -46,8 +46,9 @@ public class GameBoard : NetworkBehaviour
     /// <summary>
     /// Called when the gameboard finished generating.
     /// </summary>
-    public event Action OnGameBoardGenerated = delegate { };
-    public event Action<Vector3[]> OnCoinDropPositionsGenerated = delegate { };
+    public event Action OnGameBoardGenerated;
+    public event Action<Vector3[]> OnCoinDropPositionsGenerated;
+    public event Action<int> OnGameWin;
 
     private void Awake()
     {
@@ -124,8 +125,8 @@ public class GameBoard : NetworkBehaviour
             rowCol.Row = x;
             rowCol.SetColliderHeight(boardHeight + 1);
         }
-        OnCoinDropPositionsGenerated.Invoke(coinDropPositions);
-        OnGameBoardGenerated.Invoke();
+        OnCoinDropPositionsGenerated?.Invoke(coinDropPositions);
+        OnGameBoardGenerated?.Invoke();
     }
 
     /// <summary>
@@ -221,7 +222,7 @@ public class GameBoard : NetworkBehaviour
         {
             winningSlots.Distinct();
             winningCoinSlotsPositions.Clear();
-
+            
             //Turn the winning slots in to vector2Int positions that can be send over the network.
             foreach (CoinSlot slot in winningSlots)
             {
@@ -233,6 +234,12 @@ public class GameBoard : NetworkBehaviour
 
     private void OnWinningSlotsChanged(NetworkListEvent<Vector2Int> changeEvent)
     {
+        //Invoke in networkListEvent to invoke the win on all clients
+        if(winningCoinSlotsPositions.Count > 0)
+        {
+            Debug.Log("INVOKE WIN");
+            OnGameWin?.Invoke(coinSlotsGrid[ winningCoinSlotsPositions[0].x, winningCoinSlotsPositions[0].y].OwnerTeamID);
+        }
         foreach (Vector2Int slotPosition in winningCoinSlotsPositions)
         {
             //Get the coin in the slot and start the winning glow effect on it.

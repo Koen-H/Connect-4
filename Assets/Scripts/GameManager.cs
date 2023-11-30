@@ -8,15 +8,6 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : NetworkBehaviour
 {
-    private static GameManager instance;
-    public static GameManager Singleton
-    {
-        get
-        {
-            if (instance == null) Debug.LogError("GameManager is null!");
-            return instance;
-        }
-    }
 
     [SerializeField]
     private OrderManager orderManager;
@@ -24,22 +15,34 @@ public class GameManager : NetworkBehaviour
     [SerializeField]
     private GameBoard gameBoard;
 
-    //[SerializeField]
-    //private LobbyManager lobbyManager;
-    //[SerializeField]
-    //private OrderManager orderManager;
+    public enum GameState {Loading, Playing, After}
 
+    private NetworkVariable<GameState> currentGameState = new(GameState.Loading);//Default value loading as the clients are loading when the server enters the scene.
+    public NetworkVariable<GameState>.OnValueChangedDelegate OnGameStateChange { get { return currentGameState.OnValueChanged; } set { currentGameState.OnValueChanged = value; } }
 
-    List<bool> gameLoadedOnClients;
+    private List<bool> gameLoadedOnClients;
 
     private void Awake()
     {
-        if(instance != null) {
-            return;
-        }
-        instance = this;
-        gameBoard.OnGameBoardGenerated += (GameReadyServerRpc);
+        SceneChangeManager.Singleton.OnAllLoadCompleteServerSide += OnEveryoneLoadedScene;
+        gameBoard.OnGameBoardGenerated += GameReadyServerRpc;
     }
+
+    public override void OnNetworkSpawn()
+    {
+        gameBoard.OnGameWin += OnGameWin;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        gameBoard.OnGameWin -= OnGameWin;
+    }
+    private void OnDestroy()
+    {
+        SceneChangeManager.Singleton.OnAllLoadCompleteServerSide -= OnEveryoneLoadedScene;
+        gameBoard.OnGameBoardGenerated -= GameReadyServerRpc;
+    }
+
 
     public void ReplayGame()
     {
@@ -47,12 +50,30 @@ public class GameManager : NetworkBehaviour
         gameBoard.ResetBoardClientRpc();
     }
 
+    public void ChangeTeams()
+    {
+        NetworkManager.SceneManager.LoadScene("LobbyScene",LoadSceneMode.Single);
+    }
+
+
+    /// <summary>
+    /// Once everyone in the lobby has loaded the game scene, start the InitGame on server side
+    /// </summary>
+    /// <param name="sceneEvent"></param>
+    public void OnEveryoneLoadedScene(SceneEvent sceneEvent)
+    {
+        if (sceneEvent.SceneName == "GameScene")
+        {
+            InitGame();
+        }
+    }
 
     /// <summary>
     /// Initialize the game, by generating the gameBoard and teams order.
     /// </summary>
     public void InitGame()
     {
+        currentGameState.Value = GameState.Loading;
         gameLoadedOnClients  = new List<bool>();
         
         orderManager.CreateOrder();
@@ -73,6 +94,13 @@ public class GameManager : NetworkBehaviour
 
     private void StartGame()
     {
+        currentGameState.Value = GameState.Playing;
         orderManager.OnGameStart();
     }
+
+    private void OnGameWin(int winningTeamID)
+    {
+        currentGameState.Value = GameState.After;
+    }
+
 }
