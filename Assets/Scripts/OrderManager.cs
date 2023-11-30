@@ -1,46 +1,80 @@
-using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class OrderManager : MonoBehaviour
+/// <summary>
+/// Ordermanager keeps track of the order players get their turn and grants ownership to that player.
+/// </summary>
+public class OrderManager : NetworkBehaviour
 {
-    [SerializeField]
+    [SerializeField, Tooltip("Reference to the gameLobbyData")]
+    private GameLobbySO gameLobbyData;
+
+    [SerializeField, Tooltip("In what order will the game be played?")]
     private List<Team> teamsOrder;
 
-    [SerializeField]
-    CoinDropper coinDropper;
+    private CoinDropper coinDropper;
 
-    [SerializeField]
-    LobbyManager lobbyManager;
-
+    //Keep track on how many turns there have been
     private int currentTurn = 0;
-
 
     private void Awake()
     {
-        if(coinDropper == null) GetComponent<CoinDropper>();
-        coinDropper.OnCoinDropped.AddListener(AfterCoinDrop);
+        coinDropper = GetComponent<CoinDropper>();
+       
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        if(IsServer) coinDropper.OnCoinDropped += AfterCoinDrop;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+        if(IsServer) coinDropper.OnCoinDropped -= AfterCoinDrop;
     }
 
 
+    /// <summary>
+    /// Creates the order the teams will play.
+    /// </summary>
     public void CreateOrder()
     {
-        teamsOrder = new (lobbyManager.Teams);
+        currentTurn = 0;//Reset the current turn back to 0. Teams can keep their teamturns to allow a fair play order within the teams.
+        teamsOrder = new(gameLobbyData.Teams);
         teamsOrder.Shuffle();
     }
 
+
+    /// <summary>
+    /// When the game starts, we need to spawn a coin for the current player.
+    /// </summary>
     public void OnGameStart()
     {
-        Team currentTeam = teamsOrder[currentTurn % teamsOrder.Count];
-        coinDropper.CreateCoin(currentTeam);
+        GranTurn();
     }
 
 
+    /// <summary>
+    /// Only happens on server side.
+    /// </summary>
     private void AfterCoinDrop()
     {
         currentTurn++;
-        Team currentTeam = teamsOrder[currentTurn % teamsOrder.Count];
-        coinDropper.CreateCoin(currentTeam);
+        GranTurn();
     }
-
+    
+    /// <summary>
+    /// Grants the turn to the next team and player, and informs all clients to locally spawn a coin for that team.
+    /// </summary>
+    private void GranTurn()
+    {
+        Team currentTeam = teamsOrder[currentTurn % teamsOrder.Count];
+        Player currentPlayer = currentTeam.GetCurrentPlayer();
+        currentTeam.TeamTurn++;
+        coinDropper.NetworkObject.ChangeOwnership(currentPlayer.ClientID);//Grant ownership to the player that got the next turn.
+        coinDropper.CreateCoinClientRpc(currentTeam.TeamID);
+    }
 }

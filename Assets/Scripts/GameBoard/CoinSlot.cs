@@ -11,6 +11,8 @@ public class CoinSlot : MonoBehaviour
     private bool hasCoin = false;
     public bool HasCoin { get { return hasCoin; } }
 
+    public Vector2Int SlotPosition = Vector2Int.zero;
+
     /// <summary>
     /// Fill this slot with a coin
     /// </summary>
@@ -21,6 +23,13 @@ public class CoinSlot : MonoBehaviour
         ownerTeamID = insertedCoin.Team.TeamID;
         hasCoin = true;
     }
+
+    public void EmptySlot()
+    {
+        insertedCoin = null;
+        hasCoin = false;
+    }
+
 
     public Coin GetCoin()
     {

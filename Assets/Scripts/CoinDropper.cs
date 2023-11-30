@@ -1,71 +1,124 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class CoinDropper : MonoBehaviour
+/// <summary>
+/// Coin dropper handles player input by 
+/// 
+/// The ownership of this object is moved between clients, allowing only the owner to change the position of the coin.
+/// </summary>
+public class CoinDropper : NetworkBehaviour
 {
-    [SerializeField]
-    private Coin coinPrefab;
-    [Tooltip("The coin currently selected, the next one to drop")]
     private Coin currentCoin;
 
-    private int selectedRow = 0;
+    [SerializeField]
+    private Coin coinPrefab;
 
-    public UnityEvent OnCoinDropped = new();
+    [SerializeField, Tooltip("Reference to the gameLobbyData")]
+    private GameLobbySO gameLobbyData;
+
+    public event Action OnCoinDropped;
+
 
     [SerializeField]
-    GameBoard gameBoard;
+    private GameBoard gameBoard;
+
+    private NetworkVariable<int> selectedRow = new(0, default, NetworkVariableWritePermission.Owner);
+
 
     [SerializeField, Tooltip("The row collider layer")]
     private LayerMask rowColliderLayer;
 
     private Vector3[] coinDropPositions;
 
+
+
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        GameManager.Singleton.OnGameInitialized.AddListener(Initalize);
+        //Whenever the gameobard is generated, retrieve the new drop positions for each row.
+        gameBoard.OnCoinDropPositionsGenerated += UpdateDropPositions;
+        selectedRow.OnValueChanged += UpdateCoinPosition;
     }
 
-    private void Initalize()
+    /// <summary>
+    /// Retrieves the updated coinDropPositions from the gameboard
+    /// </summary>
+    private void UpdateDropPositions(Vector3[] newCoinDropPositions)
     {
-        coinDropPositions = gameBoard.CoinDropPositions;
-
+        coinDropPositions = newCoinDropPositions;
     }
 
 
     void Update()
     {
+        //Ownership is granted to the client who's turn it is
+        if (!IsOwner) return;
+        if (currentCoin == null) return;
+        FindRow();
+        if (Input.GetMouseButtonDown(0)) TryDropCoinServerRpc(selectedRow.Value);//We know this value is correct on the client that sends it
+    }
 
+
+    /// <summary>
+    /// Find the row the player is currently hovering over
+    /// </summary>
+    private void FindRow()
+    {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, rowColliderLayer))
         {
             if (hitInfo.collider.gameObject.TryGetComponent<RowCollider>(out RowCollider rowCol))
             {
-                SelectRow(rowCol.Row);
+                selectedRow.Value = rowCol.Row;
             }
         }
-        if (Input.GetMouseButtonDown(0)) DropCoin();
     }
 
-    public void CreateCoin(Team currentTeam)
+
+    [ClientRpc]
+    public void CreateCoinClientRpc(int teamID)
     {
+        Team team = gameLobbyData.GetTeam(teamID);
         currentCoin = Instantiate(coinPrefab);
-        currentCoin.SetTeam(currentTeam);
-        currentCoin.transform.position = coinDropPositions[selectedRow];
+        currentCoin.SetTeam(team);
+        Vector3 targetPos = coinDropPositions[selectedRow.Value];
+        currentCoin.transform.position = targetPos;
+        currentCoin.MoveTo(targetPos);
     }
 
-    void SelectRow(int newSelectedRow = 0)
+
+    private void UpdateCoinPosition(int oldRow, int newRow)
     {
-        currentCoin.transform.position = coinDropPositions[newSelectedRow];
-        selectedRow = newSelectedRow;
+        currentCoin.MoveTo(coinDropPositions[newRow]);
     }
 
-    void DropCoin()
+
+    /// <summary>
+    /// Tell the server to drop coin, will check if possible
+    /// </summary>
+    /// <param name="dropInRow">The row selected</param>
+    [ServerRpc]
+    private void TryDropCoinServerRpc(int dropInRow)
     {
-        gameBoard.InsertCoin(currentCoin, selectedRow);
-        OnCoinDropped.Invoke();
+        //NOTE: Send row as rpc param incase of latency in the networkvariable SelectedRow.
+        if (gameBoard.CanDrop(dropInRow))
+        {
+            //Inform all clients to drop in this row, this includes the server as the server is a host (server and client)
+            InsertCoinClientRpc(dropInRow);
+            OnCoinDropped?.Invoke();
+        }
     }
+
+    /// <summary>
+    /// Inform clients to drop the coin in the selected row.
+    /// </summary>
+    [ClientRpc]
+    private void InsertCoinClientRpc(int dropInRow)
+    {
+        gameBoard.InsertCoin(currentCoin, dropInRow);
+    }
+
+
 }
