@@ -31,8 +31,8 @@ public class GameBoard : NetworkBehaviour
     /// <summary>
     /// 2D map of the gameBoard
     /// </summary>
-    private CoinSlot[,] coinSlots;
-    public CoinSlot[,] CoinSlots { get { return coinSlots; } }
+    private CoinSlot[,] coinSlotsGrid;
+    public CoinSlot[,] CoinSlotsGrid { get { return coinSlotsGrid; } }
 
     public NetworkList<Vector2Int> winningCoinSlotsPositions;
 
@@ -64,8 +64,13 @@ public class GameBoard : NetworkBehaviour
     {
         foreach (Coin coin in insertedCoins) coin.EnableDropPhysics();
         insertedCoins.Clear();
-        //TODO:: MArk slots as empty
-
+        for (int x = 0; x < boardWidth; x++)
+        {
+            for (int y = 0; y < boardHeight; y++)
+            {
+                coinSlotsGrid[x, y]?.EmptySlot();
+            }
+        }
         if (IsServer)
         {
             winningCoinSlotsPositions.Clear();
@@ -81,6 +86,7 @@ public class GameBoard : NetworkBehaviour
     {
         //Destroy all children to destroy potential previous board.
         transform.DestroyAllChildObjects();
+        coinSlotsGrid = new CoinSlot[boardWidth, boardHeight];
         ResetBoard();
         coinDropPositions = new Vector3[boardWidth];
 
@@ -97,10 +103,10 @@ public class GameBoard : NetworkBehaviour
                 newInstance.SlotPosition = new Vector2Int(x, y);
                 newInstance.gameObject.name = $"CoinSlot {x},{y}";
                 newInstance.transform.localPosition = new Vector3(x, y, 0);
-                coinSlots[x, y] = newInstance;
+                coinSlotsGrid[x, y] = newInstance;
             }
             //Create coin Drop position
-            coinDropPositions[x] = coinSlots[x, boardHeight - 1].transform.position + new Vector3(0, 0.75f, 0);
+            coinDropPositions[x] = coinSlotsGrid[x, boardHeight - 1].transform.position + new Vector3(0, 0.75f, 0);
 
             //Instantiate a row collider on the row
             RowCollider rowCol = Instantiate(rowColiderPrefab, this.transform);
@@ -135,7 +141,7 @@ public class GameBoard : NetworkBehaviour
             for (int y = 0; y < boardHeight; y++)
             {
                 //The slot we are checking diagonal, vertical and horizontally from
-                CoinSlot currentCoinSlot = coinSlots[x, y];
+                CoinSlot currentCoinSlot = coinSlotsGrid[x, y];
 
                 //If the slot doesn't have a coin, continue
                 if (!currentCoinSlot.HasCoin) continue;
@@ -153,7 +159,7 @@ public class GameBoard : NetworkBehaviour
                     List<CoinSlot> topSlots = new List<CoinSlot> { currentCoinSlot };
                     for (int t = 1; t < connectWinCondition; t++)
                     {
-                        CoinSlot slotToCheck = coinSlots[x, y + t];
+                        CoinSlot slotToCheck = coinSlotsGrid[x, y + t];
                         //Stop checking this direction if it doesn't have a coin or the teamID don't match
                         if (!currentCoinSlot.IsCoinMatch(slotToCheck)) break;
                         topSlots.Add(slotToCheck);
@@ -166,7 +172,7 @@ public class GameBoard : NetworkBehaviour
                     List<CoinSlot> rightSlots = new List<CoinSlot> { currentCoinSlot };
                     for (int r = 1; r < connectWinCondition; r++)
                     {
-                        CoinSlot slotToCheck = coinSlots[x + r, y];
+                        CoinSlot slotToCheck = coinSlotsGrid[x + r, y];
                         //Stop checking this direction if it doesn't have a coin or the teamID don't match
                         if (!currentCoinSlot.IsCoinMatch(slotToCheck)) break;
                         rightSlots.Add(slotToCheck);
@@ -179,7 +185,7 @@ public class GameBoard : NetworkBehaviour
                     List<CoinSlot> diagonalRightSlots = new List<CoinSlot> { currentCoinSlot };
                     for (int dr = 1; dr < connectWinCondition; dr++)
                     {
-                        CoinSlot slotToCheck = coinSlots[x + dr, y + dr];
+                        CoinSlot slotToCheck = coinSlotsGrid[x + dr, y + dr];
                         //Stop checking this direction if it doesn't have a coin or the teamID don't match
                         if (!currentCoinSlot.IsCoinMatch(slotToCheck)) break;
                         diagonalRightSlots.Add(slotToCheck);
@@ -192,7 +198,7 @@ public class GameBoard : NetworkBehaviour
                     List<CoinSlot> diagonalLeftSlots = new List<CoinSlot> { currentCoinSlot };
                     for (int dl = 1; dl < connectWinCondition; dl++)
                     {
-                        CoinSlot slotToCheck = coinSlots[x - dl, y + dl];
+                        CoinSlot slotToCheck = coinSlotsGrid[x - dl, y + dl];
                         //Stop checking this direction if it doesn't have a coin or the teamID don't match
                         if (!currentCoinSlot.IsCoinMatch(slotToCheck)) break;
                         diagonalLeftSlots.Add(slotToCheck);
@@ -221,7 +227,7 @@ public class GameBoard : NetworkBehaviour
         foreach (Vector2Int slotPosition in winningCoinSlotsPositions)
         {
             //Get the coin in the slot and start the winning glow effect on it.
-            coinSlots[slotPosition.x, slotPosition.y].GetCoin().StartGlow();
+            coinSlotsGrid[slotPosition.x, slotPosition.y].GetCoin().StartGlow();
         }
     }
 
@@ -247,10 +253,10 @@ public class GameBoard : NetworkBehaviour
         //Get the current height of that row
         int currentHeight = rowHeight[row];
 
-        CoinSlot insertedCoinSlot = coinSlots[row, currentHeight];
+        CoinSlot insertedCoinSlot = coinSlotsGrid[row, currentHeight];
         insertedCoinSlot.FillSlot(insertedCoin);
         insertedCoin.transform.position = coinDropPositions[row];//Make sure the coin is above the slot before dropping it to prevent diagonal movement through the board.
-        insertedCoin.MoveTo(coinSlots[row, currentHeight].transform.position);
+        insertedCoin.MoveTo(coinSlotsGrid[row, currentHeight].transform.position);
         insertedCoins.Add(insertedCoin);
         if (IsServer)
         {

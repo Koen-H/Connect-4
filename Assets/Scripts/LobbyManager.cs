@@ -10,9 +10,8 @@ using UnityEngine.SceneManagement;
 public class LobbyManager : NetworkBehaviour
 {
     [SerializeField, Tooltip("Data used for local play")]
-    private GameLobbySO localData;
-    [SerializeField, Tooltip("Data used for online play")]
-    private GameLobbySO onlineData;
+    private GameLobbySO gameLobby;
+
 
     //Lobby variables
     private Dictionary<ulong, ClientManager> clients = new Dictionary<ulong, ClientManager>();

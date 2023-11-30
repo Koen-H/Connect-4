@@ -7,11 +7,13 @@ using UnityEngine;
 /// </summary>
 public class OrderManager : NetworkBehaviour
 {
-    [SerializeField, Tooltip("Reference to the gameLobbyData")]
+    [SerializeField]
     private GameLobbySO gameLobbyData;
 
     [SerializeField, Tooltip("In what order will the game be played?")]
     private List<Team> teamsOrder;
+
+    private int[] teamTurns;
 
     private CoinDropper coinDropper;
 
@@ -37,13 +39,15 @@ public class OrderManager : NetworkBehaviour
     }
 
 
+
+
     /// <summary>
     /// Creates the order the teams will play.
     /// </summary>
     public void CreateOrder()
     {
-        currentTurn = 0;//Reset the current turn back to 0. Teams can keep their teamturns to allow a fair play order within the teams.
         teamsOrder = new(gameLobbyData.Teams);
+        teamTurns = new int[teamsOrder.Count];
         teamsOrder.Shuffle();
     }
 
@@ -53,7 +57,7 @@ public class OrderManager : NetworkBehaviour
     /// </summary>
     public void OnGameStart()
     {
-        GranTurn();
+        GrandTurn();
     }
 
 
@@ -63,17 +67,18 @@ public class OrderManager : NetworkBehaviour
     private void AfterCoinDrop()
     {
         currentTurn++;
-        GranTurn();
+        GrandTurn();
     }
     
     /// <summary>
     /// Grants the turn to the next team and player, and informs all clients to locally spawn a coin for that team.
     /// </summary>
-    private void GranTurn()
+    private void GrandTurn()
     {
-        Team currentTeam = teamsOrder[currentTurn % teamsOrder.Count];
-        Player currentPlayer = currentTeam.GetCurrentPlayer();
-        currentTeam.TeamTurn++;
+        int currentIndex = currentTurn % teamsOrder.Count;
+        Team currentTeam = teamsOrder[currentIndex];
+        teamTurns[currentIndex]++;
+        Player currentPlayer = gameLobbyData.GetCurrentPlayer(currentTeam, teamTurns[currentIndex]);
         coinDropper.NetworkObject.ChangeOwnership(currentPlayer.ClientID);//Grant ownership to the player that got the next turn.
         coinDropper.CreateCoinClientRpc(currentTeam.TeamID);
     }
