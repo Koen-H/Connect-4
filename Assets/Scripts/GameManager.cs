@@ -41,6 +41,12 @@ public class GameManager : NetworkBehaviour
         gameBoard.OnGameBoardGenerated += (GameReadyServerRpc);
     }
 
+    public void ReplayGame()
+    {
+        if (!IsServer) return;
+        gameBoard.ResetBoardClientRpc();
+    }
+
 
     /// <summary>
     /// Initialize the game, by generating the gameBoard and teams order.

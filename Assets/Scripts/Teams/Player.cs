@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
-using static UnityEditor.FilePathAttribute;
 
 [System.Serializable]
 public struct Player : INetworkSerializable, System.IEquatable<Player>

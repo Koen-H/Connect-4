@@ -8,7 +8,7 @@ using Unity.Services.Lobbies.Models;
 using UnityEngine;
 
 /// <summary>
-/// Load servers found through steam
+/// Load servers found through unity's lobby
 /// </summary>
 public class ServersManager : MonoBehaviour
 {
@@ -17,7 +17,7 @@ public class ServersManager : MonoBehaviour
 
     private void OnEnable()
     {
-        LoadServers();
+       // LoadServers();
     }
 
     public void LoadServers()
@@ -44,7 +44,6 @@ public class ServersManager : MonoBehaviour
         {
             QueryLobbiesOptions options = new QueryLobbiesOptions();
             options.Count = 25;
-
 
             // Order by newest lobbies first
             options.Order = new List<QueryOrder>()
