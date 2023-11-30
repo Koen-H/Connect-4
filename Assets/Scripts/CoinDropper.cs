@@ -80,7 +80,7 @@ public class CoinDropper : NetworkBehaviour
     [ClientRpc]
     public void CreateCoinClientRpc(int teamID)
     {
-        Team team = gameLobbyData.GetTeam(teamID);
+        Team team = gameLobbyData.GetTeamByID(teamID);
         currentCoin = Instantiate(coinPrefab);
         currentCoin.SetTeam(team);
         Vector3 targetPos = coinDropPositions[selectedRow.Value];

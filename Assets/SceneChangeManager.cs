@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Custom scene managaer which handles changes with networking.
@@ -47,11 +48,22 @@ public class SceneChangeManager : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         NetworkManager.Singleton.SceneManager.OnSceneEvent += SceneManager_OnSceneEvent;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnDisconnect;
     }
 
     public override void OnNetworkDespawn()
     {
         NetworkManager.Singleton.SceneManager.OnSceneEvent -= SceneManager_OnSceneEvent;
+    }
+
+
+    /// <summary>
+    /// When the player disconnects, load back to the main menu.
+    /// </summary>
+    /// <param name="clientDisconnect"></param>
+    private void OnDisconnect(ulong clientDisconnect)
+    {
+        SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
     }
 
     /// <summary>

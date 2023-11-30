@@ -753,7 +753,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   coinPrefab: {fileID: 2156843520121237741, guid: 48e16e80c456f4f4d8ffa59f938c9685,
     type: 3}
-  gameLobbyData: {fileID: 11400000, guid: 8ac6d85c637843f4986f7e3ec8e45260, type: 2}
+  gameLobbyData: {fileID: 11400000, guid: b1e7cc2b610bd2945a353928ff421d1e, type: 2}
   gameBoard: {fileID: 974831979}
   rowColliderLayer:
     serializedVersion: 2
@@ -805,7 +805,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ceab490a0abee54baea90fcb4f7b4f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameLobbyData: {fileID: 11400000, guid: 8ac6d85c637843f4986f7e3ec8e45260, type: 2}
+  gameLobbyData: {fileID: 11400000, guid: b1e7cc2b610bd2945a353928ff421d1e, type: 2}
   teamsOrder: []
 --- !u!1 &1269028196
 GameObject:
