@@ -31,7 +31,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8418536063501128846
 MonoBehaviour:
@@ -48,7 +48,7 @@ MonoBehaviour:
   NetworkConfig:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 141575067024745062}
-    PlayerPrefab: {fileID: 1118310995286627053, guid: d6a2f4870d09af641a7c6bbfb23c048e,
+    PlayerPrefab: {fileID: 217764606193972405, guid: d6a2f4870d09af641a7c6bbfb23c048e,
       type: 3}
     Prefabs:
       NetworkPrefabsLists:
