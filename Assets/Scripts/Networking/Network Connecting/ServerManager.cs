@@ -12,7 +12,7 @@ using Unity.Services.Relay.Models;
 using UnityEngine;
 
 /// <summary>
-/// Will create a server and relay + lobby using unity services
+/// Manages server connection by creating relay/lobby using unity services
 /// </summary>
 public class ServerManager : MonoBehaviour
 {
@@ -166,7 +166,7 @@ public class ServerManager : MonoBehaviour
         {
             Debug.Log(e);
         }
-        return null;
+        return new List<Lobby>();
     }
 
     /// <summary>

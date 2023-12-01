@@ -7,10 +7,13 @@ using UnityEngine;
 /// </summary>
 public class RowCollider : MonoBehaviour
 {
-    [Tooltip("")]
     public int Row { get; set; }
-    [SerializeField]
     private BoxCollider boxCol;
+
+    private void Awake()
+    {
+        boxCol = GetComponent<BoxCollider>();
+    }
 
     public void SetColliderHeight(float newHeight)
     {

@@ -5,20 +5,20 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Lobby manager keeps track of who's currently in the lobby and the teams
+/// Lobby manager is a custom made manager for keeping track of clientsManagers.
+/// In combination with networkSceneManager, it will bring clients back to the main menu when they lose connection.
 /// </summary>
 public class LobbyManager : NetworkBehaviour
 {
     [SerializeField, Tooltip("Data used for local play")]
     private GameLobbySO gameLobby;
 
-
-    //Lobby variables
     private Dictionary<ulong, ClientManager> clients = new Dictionary<ulong, ClientManager>();
     public Dictionary<ulong, ClientManager> Clients { get { return clients; } }
 
     public static event System.Action<ClientManager> OnNewClientJoined;
     public static event System.Action<ClientManager> OnClientLeft;
+    
 
     private static LobbyManager instance;
     public static LobbyManager Singleton
@@ -57,14 +57,14 @@ public class LobbyManager : NetworkBehaviour
     public void AddClient(ulong id, ClientManager newClient)
     {
         clients.Add(id, newClient);
-        if (OnNewClientJoined != null) OnNewClientJoined.Invoke(newClient);
+        OnNewClientJoined?.Invoke(newClient);
 
         Debug.Log($"Client({id}) connected!");
     }
     public void RemoveClient(ulong id, ClientManager leftClient)
     {
         clients.Remove(id);
-        if (OnClientLeft != null) OnClientLeft.Invoke(leftClient);
+        OnClientLeft?.Invoke(leftClient);
         Debug.Log($"Client({id}) disconnected!");
     }
 
@@ -76,7 +76,6 @@ public class LobbyManager : NetworkBehaviour
 
     public void OnClientConnectionLost(ulong lostClientID)
     {
-
         ClientManager client = GetClient(lostClientID);
         client?.OnLeaving();
 

@@ -4,6 +4,10 @@ using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 
+/// <summary>
+/// 
+/// Note: Coins are not networked objects, their position is not synchronized through a networkworkTransform because I wanted to do a physics drop where the coins fall on the table and it is not necessary to network it.
+/// </summary>
 public class Coin : MonoBehaviour
 {
     [Tooltip("To which team does this coin belong to?")]
@@ -11,15 +15,32 @@ public class Coin : MonoBehaviour
     public Team Team { get { return team; } }
 
     [Header("Rendering")]
-    [SerializeField, Tooltip("Mesh renderer of the coin, used for setting the color and making it glow")]
+    [SerializeField, Tooltip("Mesh renderer of the coin, used for setting the color and making it glow on win")]
     private MeshRenderer meshRenderer;
+    private bool isGlowing = false;
 
     [SerializeField]
     private Rigidbody rb;
 
-
-    private bool isGlowing = false;
+    private Vector3 targetPos;
     private bool moveToTargetPos = false;
+
+    [SerializeField, Tooltip("The min and max of how fast the coin can shrink")]
+    private Vector2 shrinkSpeedRange = new Vector2(0.1f,0.2f);
+
+    private void Update()
+    {
+        if (moveToTargetPos)
+        {
+            // Calculate the direction and distance to the target
+            Vector3 direction = targetPos - transform.position;
+            float distanceToMove = 10 * Time.deltaTime;
+
+            // Move the GameObject towards the target position
+            transform.Translate(direction.normalized * Mathf.Min(distanceToMove, direction.magnitude), Space.World);
+        }
+    }
+
 
     public void SetTeam(Team newTeam)
     {
@@ -27,6 +48,10 @@ public class Coin : MonoBehaviour
         SetColor(team.TeamColor);
     }
 
+    /// <summary>
+    /// Set the color of the material of the coin.
+    /// </summary>
+    /// <param name="newColor"></param>
     private void SetColor(Color newColor)
     {
         meshRenderer.material.SetColor("_BaseColor", newColor);
@@ -45,29 +70,30 @@ public class Coin : MonoBehaviour
     }
 
     /// <summary>
-    /// Disables the kinematic property of the coin, allowing it to drop down to the bottom of the board like real coins
+    /// Disables the kinematic property of the coin, allowing it to drop down to the bottom of the board just like real life.
+    /// Starts the shrinking coroutine, a unique way for the coins to dissapear.
     /// </summary>
     public void EnableDropPhysics()
     {
         rb.isKinematic = false;
         moveToTargetPos = false;
+        StartCoroutine(Shrink());
     }
 
-    private Vector3 targetPos;
 
-    private void Update()
+    private IEnumerator Shrink()
     {
-        if (moveToTargetPos)
-        {
-            // Calculate the direction and distance to the target
-            Vector3 direction = targetPos - transform.position;
-            float distanceToMove = 10 * Time.deltaTime;
+        float destroyValue = 0.05f;
+        float shrinkSpeed = Random.Range(shrinkSpeedRange.x, shrinkSpeedRange.y);
+        Vector3 shrinkVector = new Vector3(shrinkSpeed, shrinkSpeed, shrinkSpeed);
+        while( transform.localScale.x > destroyValue) {
 
-            // Move the GameObject towards the target position
-            transform.Translate(direction.normalized * Mathf.Min(distanceToMove, direction.magnitude), Space.World);
+            transform.localScale -= shrinkVector * Time.deltaTime;
+            yield return null;
         }
+        Destroy(this.gameObject);
+        yield return null;
     }
-
 
     private IEnumerator GlowLerp()
     {

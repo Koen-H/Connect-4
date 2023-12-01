@@ -916,7 +916,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.3584906, g: 0.3584906, b: 0.3584906, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -1173,7 +1173,7 @@ GameObject:
   - component: {fileID: 402712029}
   - component: {fileID: 402712030}
   m_Layer: 5
-  m_Name: Server Join UI
+  m_Name: Join Options UI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4551,7 +4551,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   singleLobbyItemUIPrefab: {fileID: 3378882270650059389, guid: ca3fc2995370caf4c8a25f1203198147,
     type: 3}
-  serverList: {fileID: 3180922249914799491}
+  lobbyList: {fileID: 3180922249914799491}
   lobbiesFoundUI: {fileID: 213572004}
 --- !u!224 &7794797520416167654
 RectTransform:

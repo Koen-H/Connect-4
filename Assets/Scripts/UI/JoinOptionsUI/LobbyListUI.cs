@@ -5,14 +5,14 @@ using Unity.Services.Lobbies.Models;
 using UnityEngine;
 
 /// <summary>
-/// Load servers found through unity's lobby
+/// Instantiate single lobby itemUI prefabs for the lobbies found via the lobbymanager
 /// </summary>
-public class ServersManager : MonoBehaviour
+public class LobbyListUI : MonoBehaviour
 {
     [SerializeField]
     private SingleLobbyItemUI singleLobbyItemUIPrefab;
     [SerializeField]
-    private GameObject serverList;
+    private GameObject lobbyList;
 
     [SerializeField]
     private TextMeshProUGUI lobbiesFoundUI;
@@ -29,13 +29,13 @@ public class ServersManager : MonoBehaviour
     public async void LoadLobbies()
     {
         lobbiesFoundUI.text = "Loading lobbies...";
-        serverList.transform.DestroyAllChildObjects();
+        lobbyList.transform.DestroyAllChildObjects();
 
         List<Lobby> lobbies = await ServerManager.Singleton.GetLobbies();
 
         foreach (Lobby lobby in lobbies)
         {
-            SingleLobbyItemUI lobbyItemInstance = Instantiate(singleLobbyItemUIPrefab, serverList.transform);
+            SingleLobbyItemUI lobbyItemInstance = Instantiate(singleLobbyItemUIPrefab, lobbyList.transform);
             lobbyItemInstance.SetupLobbyItem(lobby);
         }
 

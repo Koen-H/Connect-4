@@ -15,7 +15,7 @@ public class ClientManager : NetworkBehaviour
 
     public event System.Action<ClientManager> OnClientLeft;
 
-    //Get the clientManager, that belongs to you, the client.
+    //Get the clientManager, that belongs to you, the client
     private static ClientManager myClient;
     public static ClientManager MyClient
     {

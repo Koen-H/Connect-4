@@ -6,6 +6,9 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Gamemanager keeps track of the current state of the game, it can init, start and replay the game.
+/// </summary>
 public class GameManager : NetworkBehaviour
 {
 
@@ -30,12 +33,14 @@ public class GameManager : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        gameBoard.OnGameWin += OnGameWin;
+        gameBoard.OnGameWin += EndGame;
+        gameBoard.OnGameTied += EndGame;
     }
 
     public override void OnNetworkDespawn()
     {
-        gameBoard.OnGameWin -= OnGameWin;
+        gameBoard.OnGameWin -= EndGame;
+        gameBoard.OnGameTied -= EndGame;
     }
     public void OnDisable()
     {
@@ -43,7 +48,11 @@ public class GameManager : NetworkBehaviour
         gameBoard.OnGameBoardGenerated -= GameReadyServerRpc;
     }
 
+    #region Invoked by buttons after game ended
 
+    /// <summary>
+    /// Inform all clients to clean up the board and set the gamestate to playing again.
+    /// </summary>
     public void ReplayGame()
     {
         if (!IsServer) return;
@@ -51,10 +60,14 @@ public class GameManager : NetworkBehaviour
         currentGameState.Value = GameState.Playing;
     }
 
+    /// <summary>
+    /// Loads the lobby scene again
+    /// </summary>
     public void ChangeTeams()
     {
         NetworkManager.SceneManager.LoadScene("LobbyScene",LoadSceneMode.Single);
     }
+    #endregion
 
 
     /// <summary>
@@ -100,9 +113,16 @@ public class GameManager : NetworkBehaviour
         orderManager.OnGameStart();
     }
 
-    private void OnGameWin(int winningTeamID)
+    #region End game
+    private void EndGame(int WinningTeamID)
+    {
+        if (IsServer) currentGameState.Value = GameState.After;
+    }
+
+    private void EndGame()
     {
         if(IsServer) currentGameState.Value = GameState.After;
     }
+    #endregion
 
 }

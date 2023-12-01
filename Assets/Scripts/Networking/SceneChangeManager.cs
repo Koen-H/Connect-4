@@ -7,21 +7,35 @@ using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Custom scene managaer which handles changes with networking.
+/// Custom Network Scene Managaer which handles changes with networking.
 /// </summary>
 public class SceneChangeManager : NetworkBehaviour
 {
-
+    /// <summary>
+    /// When a client finsihed loading, called on the server
+    /// </summary>
     public Action<SceneEvent> OnLoadCompleteServerSide;
+    /// <summary>
+    /// When a client finsihed loading, called locally on the client
+    /// </summary>
     public Action<SceneEvent> OnLoadCompleteClientSide;
 
+    /// <summary>
+    /// When a client finished unloading, called on the server
+    /// </summary>
     public Action<SceneEvent> OnUnLoadCompleteServerSide;
+    /// <summary>
+    /// When a client finished unloading, called locally on the client
+    /// </summary>
     public Action<SceneEvent> OnUnLoadCompleteClientSide;
 
     /// <summary>
-    /// When all clients finished loading the scene.
+    /// When all clients finished loading the scene, called only on the server
     /// </summary>
     public event Action<SceneEvent> OnAllLoadCompleteServerSide;
+    /// <summary>
+    /// When all clients finished loading the scene, called locally on the client
+    /// </summary>
     public event Action<SceneEvent> OnAllLoadCompleteClientSide;
 
     private static SceneChangeManager instance;
@@ -81,6 +95,9 @@ public class SceneChangeManager : NetworkBehaviour
         NetworkManager.Singleton.SceneManager.LoadScene("LobbyScene", LoadSceneMode.Single);
     }
 
+    /// <summary>
+    /// Shut down the network connection, clean up the networkManager and load the main scene.
+    /// </summary>
     public void ReturnToMain()
     {
         NetworkManager.Singleton.Shutdown();

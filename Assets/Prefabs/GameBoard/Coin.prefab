@@ -48,6 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   meshRenderer: {fileID: 9174146502522507653}
   rb: {fileID: 4825613318128756121}
+  shrinkSpeedRange: {x: 0.1, y: 0.2}
 --- !u!54 &4825613318128756121
 Rigidbody:
   m_ObjectHideFlags: 0

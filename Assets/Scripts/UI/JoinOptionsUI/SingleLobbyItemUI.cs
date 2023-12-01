@@ -3,7 +3,6 @@ using TMPro;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class SingleLobbyItemUI : MonoBehaviour
 {
@@ -26,6 +25,9 @@ public class SingleLobbyItemUI : MonoBehaviour
         joinCode = lobby.Data["JOIN_CODE"].Value;
     }
     
+    /// <summary>
+    /// Try and join the associated server.
+    /// </summary>
     public void TryJoinServer()
     {
         try

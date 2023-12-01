@@ -4,6 +4,10 @@ public static class ListExtensions
 {
     private static System.Random rng = new System.Random();
 
+    /// <summary>
+    /// Shuffle a list in to a random order.
+    /// </summary>
+    /// <param name="list"></param>
     public static void Shuffle<T>(this IList<T> list)
     {
         int n = list.Count;

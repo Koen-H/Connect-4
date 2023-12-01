@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameUI : MonoBehaviour
 {
@@ -18,10 +16,9 @@ public class GameUI : MonoBehaviour
     private GameObject afterGameUI;
     [SerializeField]
     private TextMeshProUGUI winnerTextUI;
-
-    [Header("Always displayed")]
     [SerializeField]
-    private TextMeshProUGUI connectedClientsTextUI;
+    private Button replayButton;
+
 
     [Header("Scene Objects")]
     [SerializeField]
@@ -41,31 +38,27 @@ public class GameUI : MonoBehaviour
         gameManager.OnGameStateChange += OnGameStateChange;
         orderManager.OnCurrentPlayerChanged += OnCurrentPlayerChange;
         gameBoard.OnGameWin += OnGameWon;
+        gameBoard.OnGameTied += OnGameTied;
+        //If a player leaves, disable the replayButton 
+        LobbyManager.OnClientLeft += DisableReplayButton;
     }
 
-    private void OnEnable()
+    /// <summary>
+    /// Disable the interaction of the replayButton
+    /// </summary>
+    /// <param name="clientManager"></param>
+    void DisableReplayButton(ClientManager clientManager)
     {
-        LobbyManager.OnClientLeft += UpdateActiveClients;
-        UpdateActiveClients();
-    }
-    private void OnDisable()
-    {
-        LobbyManager.OnClientLeft -= UpdateActiveClients;
+        replayButton.interactable = false;
     }
 
     private void OnDestroy()
     {
+        LobbyManager.OnClientLeft -= DisableReplayButton;
         gameManager.OnGameStateChange -= OnGameStateChange;
         orderManager.OnCurrentPlayerChanged -= OnCurrentPlayerChange;
         gameBoard.OnGameWin -= OnGameWon;
-    }
-
-    private void UpdateActiveClients(ClientManager leavingClient = null)
-    {
-        int connectedClients = LobbyManager.Singleton.Clients.Count;
-        string newText = $"{connectedClients} client";
-        newText += connectedClients > 1 ? "s connected" : " connected";
-        connectedClientsTextUI.text = newText;
+        gameBoard.OnGameTied -= OnGameTied;
     }
 
 
@@ -91,6 +84,12 @@ public class GameUI : MonoBehaviour
         Team winningTeam = gameLobby.GetTeamByID(winningTeamId);
         winnerTextUI.text = $"{winningTeam.TeamName} WINS!";
         winnerTextUI.color = winningTeam.TeamColor;
+    }
+
+    private void OnGameTied()
+    {
+        winnerTextUI.text = "It's a tie!";
+        winnerTextUI.color = Color.white;
     }
 
 

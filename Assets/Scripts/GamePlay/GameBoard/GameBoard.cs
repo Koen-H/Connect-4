@@ -26,13 +26,10 @@ public class GameBoard : NetworkBehaviour
     [SerializeField, Tooltip("Prefab of a singular rowColider used to get the row via raycast")]
     private RowCollider rowColiderPrefab;
 
-    private List<Coin> insertedCoins = new();
-
     /// <summary>
     /// 2D map of the gameBoard
     /// </summary>
     private CoinSlot[,] coinSlotsGrid;
-    public CoinSlot[,] CoinSlotsGrid { get { return coinSlotsGrid; } }
 
     private NetworkList<Vector2Int> winningCoinSlotsPositions;
 
@@ -43,19 +40,32 @@ public class GameBoard : NetworkBehaviour
     //Positions above the board where the coin will be visually displayed before dropping
     private Vector3[] coinDropPositions;
 
+    private NetworkVariable<bool> isTied = new NetworkVariable<bool>();
+
+
     /// <summary>
     /// Called when the gameboard finished generating.
     /// </summary>
     public event Action OnGameBoardGenerated;
     public event Action<Vector3[]> OnCoinDropPositionsGenerated;
     public event Action<int> OnGameWin;
+    public event Action OnGameTied;
 
     private void Awake()
     {
         rowHeight = new NetworkList<int>();
         winningCoinSlotsPositions = new NetworkList<Vector2Int>();
         winningCoinSlotsPositions.OnListChanged += OnWinningSlotsChanged;
+        isTied.OnValueChanged += OnIsTiedValueChanged;
     }
+
+    private void OnDisable()
+    {
+        winningCoinSlotsPositions.OnListChanged -= OnWinningSlotsChanged;
+        isTied.OnValueChanged -= OnIsTiedValueChanged;
+    }
+
+    #region Gameboard generation
 
     /// <summary>
     /// Tell the clients to reset the board.
@@ -66,14 +76,11 @@ public class GameBoard : NetworkBehaviour
         ResetBoard();
     }
 
-
     /// <summary>
-    /// Enable physics drop on coins, resets gameplay variables.
+    /// Emtpy the slots if filled and resets gameplay variables on server.
     /// </summary>
     public void ResetBoard()
     {
-        foreach (Coin coin in insertedCoins) coin.EnableDropPhysics();
-        insertedCoins.Clear();
         for (int x = 0; x < boardWidth; x++)
         {
             for (int y = 0; y < boardHeight; y++)
@@ -92,6 +99,19 @@ public class GameBoard : NetworkBehaviour
         }
     }
 
+    /// <summary>
+    /// Inform all clients to generate the board, this includes the server as the server will always be a host.
+    /// </summary>
+    [ClientRpc]
+    public void GenerateBoardClientRpc()
+    {
+        GenerateBoard();
+    }
+
+
+    /// <summary>
+    /// Generates the gameboard using tiles of Coinslots prefab
+    /// </summary>
     private void GenerateBoard()
     {
         //Destroy all children to destroy potential previous board.
@@ -129,16 +149,10 @@ public class GameBoard : NetworkBehaviour
         OnGameBoardGenerated?.Invoke();
     }
 
-    /// <summary>
-    /// Inform all clients to generate the board, this includes the server as the server will always be a host.
-    /// </summary>
-    [ClientRpc]
-    public void GenerateBoardClientRpc()
-    {
-        GenerateBoard();
-    }
 
+    #endregion
 
+    #region Win Condition
     /// <summary>
     /// Starting from bottom left, loop through each slot and check above, diagnoally and to the right of the slot
     /// </summary>
@@ -220,37 +234,82 @@ public class GameBoard : NetworkBehaviour
         //We got a winner if there are winning slots
         if (winningSlots.Count > 0)
         {
-            winningSlots.Distinct();
+            winningSlots.Distinct().ToList();
             winningCoinSlotsPositions.Clear();
-            
+
             //Turn the winning slots in to vector2Int positions that can be send over the network.
             foreach (CoinSlot slot in winningSlots)
             {
                 winningCoinSlotsPositions.Add(slot.SlotPosition);
             }
-            Debug.Log("WINNER!");
+        }
+        else
+        {
+            //Check if it's a tie.
+            isTied.Value = IsBoardFull();
         }
     }
+
+    /// <summary>
+    /// Checks the height in each row and if one isn't maxed it isn't full yet.
+    /// </summary>
+    /// <returns>Returns true if all the rows have reached the boardheight</returns>
+    public bool IsBoardFull()
+    {
+        //return rowHeight.Any(height => height < boardHeight); Does not work on networklist...
+        foreach (int height in rowHeight)
+        {
+            if (height < boardHeight)
+            {
+                return false;
+            }
+        }
+        Debug.Log("BOARD FULL");
+        return true;
+    }
+
 
     private void OnWinningSlotsChanged(NetworkListEvent<Vector2Int> changeEvent)
     {
         //Invoke in networkListEvent to invoke the win on all clients
-        if(winningCoinSlotsPositions.Count > 0)
+        if (winningCoinSlotsPositions.Count > 0)
         {
-            OnGameWin?.Invoke(coinSlotsGrid[ winningCoinSlotsPositions[0].x, winningCoinSlotsPositions[0].y].OwnerTeamID);
+            OnGameWin?.Invoke(coinSlotsGrid[winningCoinSlotsPositions[0].x, winningCoinSlotsPositions[0].y].OwnerTeamID);
         }
         foreach (Vector2Int slotPosition in winningCoinSlotsPositions)
         {
-            //Get the coin in the slot and start the winning glow effect on it.
-            coinSlotsGrid[slotPosition.x, slotPosition.y].GetCoin().StartGlow();
+            //Start the glow effect on the coin inside the slot
+            coinSlotsGrid[slotPosition.x, slotPosition.y].MakeCoinGlow();
         }
+    }
+
+    private void OnIsTiedValueChanged(bool prevValue, bool newValue)
+    {
+        if(newValue) OnGameTied?.Invoke();
+    }
+
+    #endregion
+
+    #region Coin dropping
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns>Returns a struct </returns>
+    public (bool, int) GetRandomValidRow()
+    {
+        List<int> validRows = new();
+        for (int i = 0; i < rowHeight.Count; i++) if (rowHeight[i] < boardHeight) validRows.Add(i);
+        validRows.Shuffle();
+        if (validRows.Count > 0) return (true, validRows[0]);
+        return (false, validRows[0]);
     }
 
     /// <summary>
     /// Check if the coin can be dropped in this row, or if it's full already
     /// </summary>
-    /// <param name="row"></param>
-    /// <returns></returns>
+    /// <param name="row">The row in question</param>
+    /// <returns>returns true if it can be dropped</returns>
     public bool CanDrop(int row)
     {
         int currentHeight = rowHeight[row];
@@ -272,14 +331,13 @@ public class GameBoard : NetworkBehaviour
         insertedCoinSlot.FillSlot(insertedCoin);
         insertedCoin.transform.position = coinDropPositions[row];//Make sure the coin is above the slot before dropping it to prevent diagonal movement through the board.
         insertedCoin.MoveTo(coinSlotsGrid[row, currentHeight].transform.position);
-        insertedCoins.Add(insertedCoin);
         if (IsServer)
         {
             rowHeight[row]++;
-            if (IsServer) CheckForWin();
+            CheckForWin();
         }
         return true;
     }
 
-
+    #endregion
 }

@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Coinslot is one tile of the gameboard.
+/// </summary>
 public class CoinSlot : MonoBehaviour
 {
 
@@ -24,16 +27,22 @@ public class CoinSlot : MonoBehaviour
         hasCoin = true;
     }
 
+    /// <summary>
+    /// Empty the slot and enable the dropPhysics on the inserted coin, if there is one
+    /// </summary>
     public void EmptySlot()
     {
+        insertedCoin?.EnableDropPhysics();
         insertedCoin = null;
         hasCoin = false;
     }
 
-
-    public Coin GetCoin()
+    /// <summary>
+    /// Make the inserted coin glow, if there is one
+    /// </summary>
+    public void MakeCoinGlow()
     {
-        return insertedCoin;
+        insertedCoin?.StartGlow();
     }
 
     /// <summary>

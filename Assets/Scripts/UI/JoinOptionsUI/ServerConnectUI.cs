@@ -1,16 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
-using Unity.Services.Authentication;
-using Unity.Services.Core;
-using Unity.Services.Lobbies;
-using Unity.Services.Lobbies.Models;
-using Unity.Services.Relay;
-using Unity.Services.Relay.Models;
 using UnityEngine;
+
 
 public class ServerConnectUI : MonoBehaviour
 {
@@ -23,7 +15,9 @@ public class ServerConnectUI : MonoBehaviour
     [SerializeField]
     private TMP_InputField joincodeInputField;
 
-
+    /// <summary>
+    /// When the join button is submitted, retrieve the inserted value and try to join with the joincode.
+    /// </summary>
     public void JoinServerViaUserJoincode()
     {
         joiningSelectUI.SetActive(false);
@@ -44,7 +38,7 @@ public class ServerConnectUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Cancel the joining attempt by shutting down the networkManager and toggling the UI
+    /// Cancel the joining attempt by shutting down the networkManager and toggling the UI back to the overview
     /// </summary>
     public void StopJoin()
     {
