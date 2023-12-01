@@ -175,6 +175,12 @@ public class ServerManager : MonoBehaviour
     /// <param name="joinCode">The joincode of the relay</param>
     public async void SetupRelayConnectionViaRelayJoincode(string joinCode)
     {
+        if (UnityServices.State != ServicesInitializationState.Initialized)
+        {
+            await UnityServices.InitializeAsync();
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        }
+
         JoinAllocation allocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
 
         UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();

@@ -60,7 +60,7 @@ public class GameLobbySO : ScriptableObject
 
 
     /// <summary>
-    /// Get a team by teamID
+    /// Get a team by their teamID
     /// </summary>
     /// <param name="requestedTeamID">the teamID</param>
     /// <returns></returns>
@@ -69,6 +69,12 @@ public class GameLobbySO : ScriptableObject
         return teamsDict[requestedTeamID];
     }
 
+    /// <summary>
+    /// Get the current player of a team
+    /// </summary>
+    /// <param name="team">The team that got the current turn</param>
+    /// <param name="teamTurn">How many turns the team had</param>
+    /// <returns></returns>
     public Player GetCurrentPlayer(Team team, int teamTurn)
     {
         int teamID = team.TeamID;

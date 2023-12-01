@@ -4,6 +4,9 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
+/// <summary>
+/// Player is a INetworkSerializable struct, it contains a unique ID, name, related client ID and it's teamID.
+/// </summary>
 [System.Serializable]
 public struct Player : INetworkSerializable, System.IEquatable<Player>
 {

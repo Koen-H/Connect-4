@@ -34,16 +34,23 @@ public class LobbyManager : NetworkBehaviour
     {
         if (instance != null)
         {
-            Destroy(gameObject);
-            return;
+            //When in the main menu, become the new one
+            if (SceneManager.GetActiveScene().buildIndex == 0)
+            {
+                Destroy(instance.gameObject);
+            }
+            else
+            {
+                Destroy(this.gameObject);
+                return;
+            }
         }
         instance = this;
-        DontDestroyOnLoad(gameObject);
-
+        DontDestroyOnLoad(this.gameObject);
     }
 
-    private void Start() {
-
+    private void Start() 
+    {
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientConnectionLost;
     }
 
@@ -71,19 +78,15 @@ public class LobbyManager : NetworkBehaviour
     {
 
         ClientManager client = GetClient(lostClientID);
-        if (client == null) return;
-        client.OnLeaving();
+        client?.OnLeaving();
 
         if (NetworkManager.ServerClientId == lostClientID)//Lost connection with host
         {
-            ReturnToMain();
+            Debug.Log("Lost connection with host!");
+            SceneChangeManager.Singleton.ReturnToMain();
         }
     }
 
-    public void ReturnToMain(bool connectionLost = false)
-    {
-        NetworkManager.Singleton.Shutdown();
-    }
 
     /// <summary>
     /// Get a list of client IDs and exclude one client from it.

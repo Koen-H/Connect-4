@@ -4,30 +4,31 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
+/// <summary>
+/// Custom client manager, allowing for easy acces of client specific values
+/// </summary>
 public class ClientManager : NetworkBehaviour
 {
-
     //Client variables
     private NetworkVariable<ulong> clientID = new(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     public ulong ClientID { get { return clientID.Value; } }
-    public NetworkVariable<FixedString128Bytes> playerName = new("Player", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
     public event System.Action<ClientManager> OnClientLeft;
 
     //Get the clientManager, that belongs to you, the client.
-    private static ClientManager _myClient;
+    private static ClientManager myClient;
     public static ClientManager MyClient
     {
         get
         {
-            if (_myClient == null) Debug.LogError("MyClient is null");
-            return _myClient;
+            if (myClient == null) Debug.LogError("MyClient is null");
+            return myClient;
         }
     }
     
     private void Start()
     {
-        LobbyManager.Singleton.AddClient(OwnerClientId, this);//Do this after networkspawn so the data is synchronised
+        LobbyManager.Singleton.AddClient(OwnerClientId, this);
     }
 
     public override void OnNetworkSpawn()
@@ -35,11 +36,9 @@ public class ClientManager : NetworkBehaviour
         DontDestroyOnLoad(gameObject);
         if (IsOwner)
         {
-            _myClient = this;
+            myClient = this;
             clientID.Value = NetworkManager.Singleton.LocalClientId;
-            playerName.Value = $"Player {ClientID} ";
         }
-        gameObject.name = $"Client ({playerName.Value})";
     }
 
     public override void OnNetworkDespawn()
@@ -47,10 +46,9 @@ public class ClientManager : NetworkBehaviour
         LobbyManager.Singleton.RemoveClient(OwnerClientId, this);
     }
 
-
     public void OnLeaving()
     {
-        if (OnClientLeft != null) OnClientLeft.Invoke(this);
+        OnClientLeft?.Invoke(this);
     }
 
 }

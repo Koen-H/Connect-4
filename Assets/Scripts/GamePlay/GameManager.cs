@@ -39,7 +39,7 @@ public class GameManager : NetworkBehaviour
     }
     public void OnDisable()
     {
-        SceneChangeManager.Singleton.OnAllLoadCompleteServerSide -= OnEveryoneLoadedScene;
+        
         gameBoard.OnGameBoardGenerated -= GameReadyServerRpc;
     }
 
@@ -68,6 +68,7 @@ public class GameManager : NetworkBehaviour
         {
             InitGame();
         }
+        SceneChangeManager.Singleton.OnAllLoadCompleteServerSide -= OnEveryoneLoadedScene;
     }
 
     /// <summary>
@@ -83,7 +84,7 @@ public class GameManager : NetworkBehaviour
     }
 
     /// <summary>
-    /// As a client, let the server know that the gameboard loaded in
+    /// As a client, let the server know that the gameboard loaded in and the game is ready to be played
     /// </summary>
     [ServerRpc(RequireOwnership =false)]
     private void GameReadyServerRpc()

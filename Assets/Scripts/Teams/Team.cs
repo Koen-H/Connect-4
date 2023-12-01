@@ -5,6 +5,10 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
+/// <summary>
+/// Team is a INetworkSerializable struct. It contains an unique teamID, teamname and teamColor.
+/// Note: INetworkSerializable didn't allow me to implement a list of players.
+/// </summary>
 [System.Serializable]
 public struct Team : INetworkSerializable, System.IEquatable<Team>
 {

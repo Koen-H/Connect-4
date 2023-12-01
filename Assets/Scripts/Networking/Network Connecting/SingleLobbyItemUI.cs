@@ -22,10 +22,9 @@ public class SingleLobbyItemUI : MonoBehaviour
     public void SetupLobbyItem(Lobby lobby)
     {
         lobbyName.text = lobby.Name;
-        lobbyCode.text = lobby.Id;
+        lobbyCode.text = lobby.Data["JOIN_CODE"].Value;
         joinCode = lobby.Data["JOIN_CODE"].Value;
     }
-
     
     public void TryJoinServer()
     {

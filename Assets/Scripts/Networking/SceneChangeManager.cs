@@ -60,7 +60,7 @@ public class SceneChangeManager : NetworkBehaviour
         Debug.Log("Network spawn!");
     }
 
-    public void OnDisable()
+    public override void OnNetworkDespawn()
     {
         NetworkManager.Singleton.SceneManager.OnSceneEvent -= SceneManager_OnSceneEvent;
         NetworkManager.Singleton.OnClientDisconnectCallback -= OnDisconnect;
