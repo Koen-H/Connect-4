@@ -13,12 +13,14 @@ public class MainMenuManager : MonoBehaviour
     /// <summary>
     /// Playing locally will still create a host instance, but will not be shown public
     /// </summary>
-    public void HostGame()
+    public void HostGame(bool isLocal = false)
     {
-        NetworkManager.Singleton.StartHost();
-        NetworkManager.Singleton.SceneManager.LoadScene("LobbyScene", LoadSceneMode.Single);
+        ServerManager.Singleton.StartServer(isLocal);
     }
 
-
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
 
 }

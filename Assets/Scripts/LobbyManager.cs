@@ -47,7 +47,6 @@ public class LobbyManager : NetworkBehaviour
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientConnectionLost;
     }
 
-
     public void AddClient(ulong id, ClientManager newClient)
     {
         clients.Add(id, newClient);
@@ -81,7 +80,10 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
-    public void ReturnToMain(bool connectionLost = false) => NetworkManager.Singleton.Shutdown();
+    public void ReturnToMain(bool connectionLost = false)
+    {
+        NetworkManager.Singleton.Shutdown();
+    }
 
     /// <summary>
     /// Get a list of client IDs and exclude one client from it.
@@ -98,30 +100,5 @@ public class LobbyManager : NetworkBehaviour
         }
         return clients;
     }
-
-
-
-    public void OnEveryoneReady()
-    {
-        NetworkManager.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
-    }
-
-
-
-
-    //public void CreateTeams()
-    //{
-
-    //    int amountOfTeams = teams.Count;
-
-    //    //Randomly place the players in a team
-    //    List<Player> shuffledList = new List<Player>(players);
-    //    shuffledList.Shuffle();
-    //    for (int i = 0; i < shuffledList.Count; i++)
-    //    {
-    //        teams[i % amountOfTeams].AddPlayer(shuffledList[i]);
-    //    }
-
-    //}
 
 }

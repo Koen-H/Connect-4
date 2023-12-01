@@ -12,17 +12,17 @@ using UnityEngine.SceneManagement;
 public class SceneChangeManager : NetworkBehaviour
 {
 
-    public System.Action<SceneEvent> OnLoadCompleteServerSide;
-    public System.Action<SceneEvent> OnLoadCompleteClientSide;
+    public Action<SceneEvent> OnLoadCompleteServerSide;
+    public Action<SceneEvent> OnLoadCompleteClientSide;
 
-    public System.Action<SceneEvent> OnUnLoadCompleteServerSide;
-    public System.Action<SceneEvent> OnUnLoadCompleteClientSide;
+    public Action<SceneEvent> OnUnLoadCompleteServerSide;
+    public Action<SceneEvent> OnUnLoadCompleteClientSide;
 
     /// <summary>
     /// When all clients finished loading the scene.
     /// </summary>
-    public event System.Action<SceneEvent> OnAllLoadCompleteServerSide;
-    public event System.Action<SceneEvent> OnAllLoadCompleteClientSide;
+    public event Action<SceneEvent> OnAllLoadCompleteServerSide;
+    public event Action<SceneEvent> OnAllLoadCompleteClientSide;
 
     private static SceneChangeManager instance;
     public static SceneChangeManager Singleton
@@ -38,8 +38,16 @@ public class SceneChangeManager : NetworkBehaviour
     {
         if (instance != null)
         {
-            Destroy(this.gameObject);
-            return;
+            //When in the main menu, become the new one
+            if(SceneManager.GetActiveScene().buildIndex == 0)
+            {
+                Destroy(instance.gameObject);
+            }
+            else
+            {
+                Destroy(this.gameObject);
+                return;
+            }
         }
         instance = this;
         DontDestroyOnLoad(this.gameObject);
@@ -49,11 +57,13 @@ public class SceneChangeManager : NetworkBehaviour
     {
         NetworkManager.Singleton.SceneManager.OnSceneEvent += SceneManager_OnSceneEvent;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnDisconnect;
+        Debug.Log("Network spawn!");
     }
 
-    public override void OnNetworkDespawn()
+    public void OnDisable()
     {
         NetworkManager.Singleton.SceneManager.OnSceneEvent -= SceneManager_OnSceneEvent;
+        NetworkManager.Singleton.OnClientDisconnectCallback -= OnDisconnect;
     }
 
 
@@ -63,6 +73,18 @@ public class SceneChangeManager : NetworkBehaviour
     /// <param name="clientDisconnect"></param>
     private void OnDisconnect(ulong clientDisconnect)
     {
+       if(clientDisconnect == NetworkManager.Singleton.LocalClientId) ReturnToMain();
+    }
+
+    public void LoadLobby()
+    {
+        NetworkManager.Singleton.SceneManager.LoadScene("LobbyScene", LoadSceneMode.Single);
+    }
+
+    public void ReturnToMain()
+    {
+        NetworkManager.Singleton.Shutdown();
+        Destroy(NetworkManager.Singleton.gameObject);//Destroy this gameobject as it's already in the mainScene
         SceneManager.LoadScene("MainScene", LoadSceneMode.Single);
     }
 

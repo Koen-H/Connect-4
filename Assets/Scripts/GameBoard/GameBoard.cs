@@ -130,7 +130,7 @@ public class GameBoard : NetworkBehaviour
     }
 
     /// <summary>
-    /// Tell clients to generate the board
+    /// Inform all clients to generate the board, this includes the server as the server will always be a host.
     /// </summary>
     [ClientRpc]
     public void GenerateBoardClientRpc()
@@ -237,7 +237,6 @@ public class GameBoard : NetworkBehaviour
         //Invoke in networkListEvent to invoke the win on all clients
         if(winningCoinSlotsPositions.Count > 0)
         {
-            Debug.Log("INVOKE WIN");
             OnGameWin?.Invoke(coinSlotsGrid[ winningCoinSlotsPositions[0].x, winningCoinSlotsPositions[0].y].OwnerTeamID);
         }
         foreach (Vector2Int slotPosition in winningCoinSlotsPositions)

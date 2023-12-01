@@ -26,14 +26,19 @@ public class ServerConnectUI : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        NetworkManager.Singleton.OnClientConnectedCallback += OnServerJoined;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        NetworkManager.Singleton.OnClientStopped += UnSubscribe;
     }
 
     private void OnDisable()
     {
-        NetworkManager.Singleton.OnClientConnectedCallback -= OnServerJoined;
+        UnSubscribe();
+    }
+
+    private void UnSubscribe(bool b = false)
+    {
         NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        NetworkManager.Singleton.OnClientStopped -= UnSubscribe;
     }
 
     public void JoinServerViaUserJoincode()
@@ -75,11 +80,6 @@ public class ServerConnectUI : MonoBehaviour
         NetworkManager.Singleton.Shutdown();
         joiningSelectUI.SetActive(true);
         connectingUI.SetActive(false);
-    }
-
-    public void OnServerJoined(ulong clientID)
-    {
-
     }
 
     public void OnClientDisconnected(ulong clientID)

@@ -12,69 +12,110 @@ using Unity.Services.Relay.Models;
 using UnityEngine;
 
 /// <summary>
-/// Handles the server setup with unity's relay and lobby
+/// Will create a server and relay + lobby using unity services
 /// </summary>
-public class ServerManager : NetworkBehaviour
+public class ServerManager : MonoBehaviour
 {
-    [SerializeField]
-    [Tooltip("The max amount of players allowed to connect to the server")]
-    public int maxPlayers;
 
+
+    [Header("Unity Services"), Tooltip("Unity services have a free limit, can be disabled when testing locally.")]
     [SerializeField]
     private bool useUnityRelayServices = false;
-
     [SerializeField]
     private bool useUnityLobbyServices = false;
 
+    [Header("Server settings")]
+    [SerializeField, Tooltip("The max amount of players allowed to connect to the server")]
+    public int maxPlayers;
+
     [SerializeField]
-    private string joinCode;
-    public string JoinCode => joinCode;
+    private string lobbyName = "MyLobby";
+
+    private static string joinCode;
+    public static string JoinCode => joinCode;
 
     private Lobby currentLobby;
+    private static string lobbyCode;
+    public static string LobbyCode => lobbyCode;
 
-
-    /// <summary>
-    /// Start a server and load the game scene.
-    /// </summary>
-    public async void StartServer()
+    private static ServerManager instance;
+    public static ServerManager Singleton
     {
-        if (useUnityRelayServices) await CreateRelayConnection();
-
-        NetworkManager.Singleton.StartHost();
-        NetworkManager.SceneManager.LoadScene("LobbyScene",UnityEngine.SceneManagement.LoadSceneMode.Single);
+        get
+        {
+            if (instance == null) Debug.LogError("ServerManager is null!");
+            return instance;
+        }
     }
 
+    private void Awake()
+    {
+        if (instance != null)
+        {
+            Destroy(this.gameObject);
+            return;
+        }
+        instance = this;
+        DontDestroyOnLoad(this.gameObject);
+    }
 
+    /// <summary>
+    /// Start a server, create a relay if not local
+    /// </summary>
+    /// <param name="isLocal">Whether it is local only and if it should create a relay and lobby for online play</param>
+    public async void StartServer(bool isLocal = false)
+    {
+        if (useUnityRelayServices && !isLocal) await CreateRelayConnection();
+
+        NetworkManager.Singleton.StartHost();
+        SceneChangeManager.Singleton.LoadLobby();
+    }
+
+    /// <summary>
+    /// Creates a unity relay connection
+    /// </summary>
+    /// <returns></returns>
     private async Task CreateRelayConnection()
     {
         await UnityServices.InitializeAsync();
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        if (!AuthenticationService.Instance.IsAuthorized) await AuthenticationService.Instance.SignInAnonymouslyAsync();
         Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxPlayers);
         string newJoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 
         joinCode = newJoinCode;
 
         UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        transport.SetHostRelayData(allocation.RelayServer.IpV4, (ushort)allocation.RelayServer.Port,
-                allocation.AllocationIdBytes, allocation.Key, allocation.ConnectionData);
+        transport.SetHostRelayData(
+            allocation.RelayServer.IpV4,
+            (ushort)allocation.RelayServer.Port,
+            allocation.AllocationIdBytes,
+            allocation.Key,
+            allocation.ConnectionData);
 
         if (useUnityLobbyServices) await CreateLobby();
 
     }
 
+    /// <summary>
+    /// Creates a unity lobby, lobbies can be retrieved
+    /// </summary>
+    /// <returns></returns>
     private async Task CreateLobby()
     {
         CreateLobbyOptions createLobbyOption = new CreateLobbyOptions();
         createLobbyOption.IsPrivate = false;
         createLobbyOption.Data = new Dictionary<string, DataObject>();
-        DataObject dataObject = new DataObject(DataObject.VisibilityOptions.Public, JoinCode);
 
+        DataObject dataObject = new DataObject(DataObject.VisibilityOptions.Public, JoinCode);
         createLobbyOption.Data.Add("JOIN_CODE", dataObject);
-        currentLobby = await Lobbies.Instance.CreateLobbyAsync("MyConnect4 lobby", maxPlayers, createLobbyOption);
+        currentLobby = await Lobbies.Instance.CreateLobbyAsync(lobbyName, maxPlayers, createLobbyOption);
+        lobbyCode = currentLobby.LobbyCode;
+
+        StartCoroutine(HeartBeatLobbyCoroutine());
+#if UNITY_EDITOR
         Debug.Log($"LobbyCode = {currentLobby.LobbyCode}");
         Debug.Log($"Joincode = {currentLobby.Data["JOIN_CODE"].Value}");
-        StartCoroutine(HeartBeatLobbyCoroutine());
-
+#endif
     }
 
 
@@ -92,6 +133,59 @@ public class ServerManager : NetworkBehaviour
             LobbyService.Instance.SendHeartbeatPingAsync(currentLobby.Id);
             yield return delay;
         }
+    }
+
+    /// <summary>
+    /// Get a list of the current lobies
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<Lobby>> GetLobbies()
+    {
+        if (UnityServices.State != ServicesInitializationState.Initialized)
+        {
+            await UnityServices.InitializeAsync();
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        }
+
+        try
+        {
+            QueryLobbiesOptions options = new QueryLobbiesOptions();
+            options.Count = 25;
+            options.Order = new List<QueryOrder>()
+            {
+                new QueryOrder(
+                    asc: false,
+                    field: QueryOrder.FieldOptions.Created
+                    )
+            };
+
+            QueryResponse lobbies = await Lobbies.Instance.QueryLobbiesAsync(options);
+            return lobbies.Results;
+        }
+        catch (LobbyServiceException e)
+        {
+            Debug.Log(e);
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Set up a relay connection with a server using a joinCode of the relay
+    /// </summary>
+    /// <param name="joinCode">The joincode of the relay</param>
+    public async void SetupRelayConnectionViaRelayJoincode(string joinCode)
+    {
+        JoinAllocation allocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
+
+        UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+        transport.SetClientRelayData(allocation.RelayServer.IpV4,
+            (ushort)allocation.RelayServer.Port,
+            allocation.AllocationIdBytes,
+            allocation.Key,
+            allocation.ConnectionData,
+            allocation.HostConnectionData);
+
+        NetworkManager.Singleton.StartClient();
     }
 
 }

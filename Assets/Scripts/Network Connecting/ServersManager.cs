@@ -1,9 +1,6 @@
 
-using System.Collections;
 using System.Collections.Generic;
-using Unity.Services.Authentication;
-using Unity.Services.Core;
-using Unity.Services.Lobbies;
+using TMPro;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
 
@@ -12,59 +9,37 @@ using UnityEngine;
 /// </summary>
 public class ServersManager : MonoBehaviour
 {
-    [SerializeField] private ServerItem serverItemPrefab;
-    [SerializeField] private GameObject serverList;
+    [SerializeField]
+    private SingleLobbyItemUI singleLobbyItemUIPrefab;
+    [SerializeField]
+    private GameObject serverList;
 
-    private void OnEnable()
+    [SerializeField]
+    private TextMeshProUGUI lobbiesFoundUI;
+
+    private void Awake()
     {
-       // LoadServers();
-    }
-
-    public void LoadServers()
-    {
-        for (int i = serverList.transform.childCount - 1; i >= 0; i--)
-        {
-            GameObject childObject = serverList.transform.GetChild(i).gameObject;
-            Destroy(childObject);
-        }
-
         LoadLobbies();
     }
 
 
-    private async void LoadLobbies()
+    /// <summary>
+    /// Request the lobbies and display them in the lobbyList
+    /// </summary>
+    public async void LoadLobbies()
     {
-        if(UnityServices.State != ServicesInitializationState.Initialized)
+        lobbiesFoundUI.text = "Loading lobbies...";
+        serverList.transform.DestroyAllChildObjects();
+
+        List<Lobby> lobbies = await ServerManager.Singleton.GetLobbies();
+
+        foreach (Lobby lobby in lobbies)
         {
-            await UnityServices.InitializeAsync();
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            SingleLobbyItemUI lobbyItemInstance = Instantiate(singleLobbyItemUIPrefab, serverList.transform);
+            lobbyItemInstance.SetupLobbyItem(lobby);
         }
 
-        try
-        {
-            QueryLobbiesOptions options = new QueryLobbiesOptions();
-            options.Count = 25;
-
-            // Order by newest lobbies first
-            options.Order = new List<QueryOrder>()
-            {
-                new QueryOrder(
-                    asc: false,
-                    field: QueryOrder.FieldOptions.Created
-                    )
-            };
-
-            QueryResponse lobbies = await Lobbies.Instance.QueryLobbiesAsync(options);
-            foreach (Lobby lobby in lobbies.Results)
-            {
-                ServerItem serverItem = Instantiate(serverItemPrefab, serverList.transform);
-                serverItem.SetupServerItem(lobby);
-            }
-        }
-        catch (LobbyServiceException e)
-        {
-            Debug.Log(e);
-        }
+        lobbiesFoundUI.text = $"{lobbies.Count} lobbies found:";
     }
 
 }

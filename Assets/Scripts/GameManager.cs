@@ -20,7 +20,7 @@ public class GameManager : NetworkBehaviour
     private NetworkVariable<GameState> currentGameState = new(GameState.Loading);//Default value loading as the clients are loading when the server enters the scene.
     public NetworkVariable<GameState>.OnValueChangedDelegate OnGameStateChange { get { return currentGameState.OnValueChanged; } set { currentGameState.OnValueChanged = value; } }
 
-    private List<bool> gameLoadedOnClients;
+    private List<bool> gameLoadedOnClients = new();
 
     private void Awake()
     {
@@ -37,7 +37,7 @@ public class GameManager : NetworkBehaviour
     {
         gameBoard.OnGameWin -= OnGameWin;
     }
-    private void OnDestroy()
+    public void OnDisable()
     {
         SceneChangeManager.Singleton.OnAllLoadCompleteServerSide -= OnEveryoneLoadedScene;
         gameBoard.OnGameBoardGenerated -= GameReadyServerRpc;
@@ -48,6 +48,7 @@ public class GameManager : NetworkBehaviour
     {
         if (!IsServer) return;
         gameBoard.ResetBoardClientRpc();
+        currentGameState.Value = GameState.Playing;
     }
 
     public void ChangeTeams()
@@ -57,11 +58,12 @@ public class GameManager : NetworkBehaviour
 
 
     /// <summary>
-    /// Once everyone in the lobby has loaded the game scene, start the InitGame on server side
+    /// Once everyone in the lobby has loaded the game scene, Initialize the game on the server side
     /// </summary>
     /// <param name="sceneEvent"></param>
     public void OnEveryoneLoadedScene(SceneEvent sceneEvent)
     {
+        Debug.Log("Everyone finished loading");
         if (sceneEvent.SceneName == "GameScene")
         {
             InitGame();
@@ -74,10 +76,9 @@ public class GameManager : NetworkBehaviour
     public void InitGame()
     {
         currentGameState.Value = GameState.Loading;
-        gameLoadedOnClients  = new List<bool>();
+        gameLoadedOnClients.Clear();
         
         orderManager.CreateOrder();
-        //Generate the board on all clients, this includes the server as the server is a host (server as client)
         gameBoard.GenerateBoardClientRpc();
     }
 
@@ -100,7 +101,7 @@ public class GameManager : NetworkBehaviour
 
     private void OnGameWin(int winningTeamID)
     {
-        currentGameState.Value = GameState.After;
+        if(IsServer) currentGameState.Value = GameState.After;
     }
 
 }

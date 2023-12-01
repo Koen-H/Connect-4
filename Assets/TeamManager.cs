@@ -18,6 +18,9 @@ public class TeamManager : NetworkBehaviour
     private List<UITeamManager> uiManagers;
 
     [SerializeField]
+    private TextMeshProUGUI joinCodeTextUI;
+
+    [SerializeField]
     private Button startButton;
     [SerializeField]
     private TextMeshProUGUI startButtonText;
@@ -28,7 +31,7 @@ public class TeamManager : NetworkBehaviour
     private NetworkList<Team> teams;
 
     //Used for providing ID's for players, never goes down!
-    private int uniquePlayerCount = 0;
+    private int uniquePlayerCount = 1;
     private NetworkList<Player> players;
 
     [SerializeField,Tooltip("NetworkedLists will be deleted after we leave this scene, therefore we store it in a SO")]
@@ -70,12 +73,28 @@ public class TeamManager : NetworkBehaviour
         //If the client is joined after the list changed, update the data on screen by calling the methods manually.
         DisplayTeamNames();
         DisplayPlayers();
+        DisplayJoinCodes();
+       
     }
 
-    public Team GetTeam(int teamID)
+
+    /// <summary>
+    /// Retrieves and displays the joincode and lobbycode on the server side, if set.
+    /// </summary>
+    public void DisplayJoinCodes()
     {
-        return teams[teamID];
+        string joinCodeTextStr = string.Empty;
+        if (!string.IsNullOrEmpty(ServerManager.JoinCode))
+        {
+            joinCodeTextStr = $"Joincode: {ServerManager.JoinCode} (share)";
+            if (!string.IsNullOrEmpty(ServerManager.LobbyCode))
+            {
+                joinCodeTextStr += $"\nLobbycode: {ServerManager.LobbyCode}";
+            }
+        }
+        joinCodeTextUI.text = joinCodeTextStr;
     }
+
 
 
     [ServerRpc(RequireOwnership = false)]
@@ -186,6 +205,15 @@ public class TeamManager : NetworkBehaviour
         //If every client loaded the SO, load the game scene.
         if (gameLobbyLoadedOnClients.Count == LobbyManager.Singleton.Clients.Count) 
             NetworkManager.SceneManager.LoadScene("GameScene",LoadSceneMode.Single);
+    }
+
+    /// <summary>
+    /// Called by button.
+    /// </summary>
+    public void BackToMain()
+    {
+        
+        SceneChangeManager.Singleton.ReturnToMain();
     }
 
 }

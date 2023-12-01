@@ -56,11 +56,10 @@ public class OrderManager : NetworkBehaviour
     }
 
 
-    /// <summary>
-    /// When the game starts, we need to spawn a coin for the current player.
-    /// </summary>
+
     public void OnGameStart()
     {
+        Debug.Log("starting the game");
         GrandTurn();
     }
 
@@ -82,7 +81,8 @@ public class OrderManager : NetworkBehaviour
         int currentIndex = currentTurn % teamsOrder.Count;
         Team currentTeam = teamsOrder[currentIndex];
         teamTurns[currentIndex]++;
-        currentPlayer.Value = gameLobbyData.GetCurrentPlayer(currentTeam, teamTurns[currentIndex]);
+        Player newCurrentPlayer = gameLobbyData.GetCurrentPlayer(currentTeam, teamTurns[currentIndex]);
+        currentPlayer.Value = newCurrentPlayer;
         coinDropper.NetworkObject.ChangeOwnership(currentPlayer.Value.ClientID);//Grant ownership to the player that got the next turn.
         coinDropper.CreateCoinClientRpc(currentTeam.TeamID);
     }

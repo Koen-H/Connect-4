@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameUI : MonoBehaviour
 {
@@ -95,7 +96,7 @@ public class GameUI : MonoBehaviour
 
     public void QuitGame()
     {
-        NetworkManager.Singleton.Shutdown();
+        SceneChangeManager.Singleton.ReturnToMain();
     }
 
 }
