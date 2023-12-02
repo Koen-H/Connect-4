@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 3347673746864879288}
   - component: {fileID: 2156843520121237741}
   - component: {fileID: 4825613318128756121}
-  m_Layer: 0
+  - component: {fileID: -1306903733391456260}
+  m_Layer: 7
   m_Name: Coin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -48,7 +49,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   meshRenderer: {fileID: 9174146502522507653}
   rb: {fileID: 4825613318128756121}
-  shrinkSpeedRange: {x: 0.1, y: 0.2}
+  shrinkSpeedRange: {x: 0.05, y: 0.1}
+  movementSpeed: 10
 --- !u!54 &4825613318128756121
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -76,6 +78,27 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!65 &-1306903733391456260
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 374967372604566741}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.77552396, y: 0.8049635, z: 0.08230218}
+  m_Center: {x: -0.0055198967, y: 0.0018400252, z: 0.003670767}
 --- !u!1001 &7534671722966781185
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -143,6 +166,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: coin (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 63e90765a8f15e6408281af694754cbc,
+        type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

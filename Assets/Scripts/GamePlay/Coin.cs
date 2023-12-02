@@ -19,6 +19,7 @@ public class Coin : MonoBehaviour
     private MeshRenderer meshRenderer;
     private bool isGlowing = false;
 
+    [Header("Movement")]
     [SerializeField]
     private Rigidbody rb;
 
@@ -28,19 +29,9 @@ public class Coin : MonoBehaviour
     [SerializeField, Tooltip("The min and max of how fast the coin can shrink")]
     private Vector2 shrinkSpeedRange = new Vector2(0.1f,0.2f);
 
-    private void Update()
-    {
-        if (moveToTargetPos)
-        {
-            // Calculate the direction and distance to the target
-            Vector3 direction = targetPos - transform.position;
-            float distanceToMove = 10 * Time.deltaTime;
-
-            // Move the GameObject towards the target position
-            transform.Translate(direction.normalized * Mathf.Min(distanceToMove, direction.magnitude), Space.World);
-        }
-    }
-
+    [SerializeField]
+    private float movementSpeed = 10f;
+    private Coroutine movementCoroutine;
 
     public void SetTeam(Team newTeam)
     {
@@ -67,6 +58,29 @@ public class Coin : MonoBehaviour
     {
         targetPos = newTargetPos;
         moveToTargetPos = true;
+        if (movementCoroutine != null) StopCoroutine(movementCoroutine);
+        movementCoroutine = StartCoroutine(MoveToTarget());
+    }
+
+
+    private IEnumerator MoveToTarget()
+    {
+        while (moveToTargetPos)
+        {
+            Vector3 direction = targetPos - transform.position;
+            float distanceToMove = movementSpeed * Time.deltaTime;
+
+            transform.Translate(direction.normalized * Mathf.Min(distanceToMove, direction.magnitude), Space.World);
+
+            if (direction.magnitude < 0.01f)
+            {
+                transform.position = targetPos;
+                moveToTargetPos = false;
+                break;
+            }
+
+            yield return null; // Wait for the next frame
+        }
     }
 
     /// <summary>

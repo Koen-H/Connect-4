@@ -73,7 +73,7 @@ public class CoinDropper : NetworkBehaviour
         if (!playerInputEnabled)
         {
             Debug.Log("Input stopped");
-            StopCoroutine(randomDropCoroutine);
+            if(randomDropCoroutine != null) StopCoroutine(randomDropCoroutine);
         }
     }
 
