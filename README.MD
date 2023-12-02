@@ -1,6 +1,7 @@
 # Connect 4 online
 
 Connect 4 created in unity with online functionality 
+![Alt text](connect4Gameplay.gif)
 
 ## Table of Contents
 
