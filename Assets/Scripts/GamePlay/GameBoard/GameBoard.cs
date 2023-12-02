@@ -114,6 +114,7 @@ public class GameBoard : NetworkBehaviour
     /// </summary>
     private void GenerateBoard()
     {
+        Debug.Log("Generating board", this);
         //Destroy all children to destroy potential previous board.
         transform.DestroyAllChildObjects();
         coinSlotsGrid = new CoinSlot[boardWidth, boardHeight];
@@ -149,6 +150,17 @@ public class GameBoard : NetworkBehaviour
         OnGameBoardGenerated?.Invoke();
     }
 
+    /// <summary>
+    /// Creates an empty gameobject in the center of the board
+    /// </summary>
+    /// <returns>The transform placed in the center of the board</returns>
+    public Transform GetCenter()
+    {
+        Transform centerTransform = new GameObject("Center of board").transform;
+        Vector3 centerPosition = (coinSlotsGrid[boardWidth - 1, boardHeight - 1].transform.position + coinSlotsGrid[0, 0].transform.position) / 2;
+        centerTransform.position = centerPosition;
+        return centerTransform;
+    }
 
     #endregion
 
@@ -156,7 +168,7 @@ public class GameBoard : NetworkBehaviour
     /// <summary>
     /// Starting from bottom left, loop through each slot and check above, diagnoally and to the right of the slot
     /// </summary>
-    public void CheckForWin()
+    private void CheckForWin()
     {
         List<CoinSlot> winningSlots = new();
 
@@ -174,7 +186,7 @@ public class GameBoard : NetworkBehaviour
                 //NOTE: -1 as the current position is already considered as one
                 bool checkX = x + (connectWinCondition - 1) < boardWidth;
                 bool checkY = y + (connectWinCondition - 1) < boardHeight;
-                bool checkReverseX = x - (connectWinCondition - 1) > 0;
+                bool checkReverseX = x - (connectWinCondition - 1) >= 0;
 
 
                 //Check slots above
